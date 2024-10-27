@@ -38,8 +38,8 @@ function EmailWrite() {
     setLoading(true);
     const formData = new FormData(); // formData는 파일 업로드 폼데이터 저장하기 위한 객체
     formData.append('to', to); // append : 폼데이터에 ('to'라는 키 추가, to라는 현재의 상태값)
-    formData.append('title', title);
-    formData.append('content', content);
+    formData.append('subject', title);
+    formData.append('text', content);
 
     //파일 첨부 처리 반복문으로 폼데이타에 저장 / 첨부파일은 여러개
     for (let i = 0; i < files.length; i++) {
@@ -54,7 +54,7 @@ function EmailWrite() {
     // 로딩상태 아래꺼 가져오기
 
     try {
-      const response = await axios.post('/sent-mail', formData, {
+      const response = await axios.post('/api/email/send', formData, {
         headers: {
           'Content-Type': 'multipart/form-data' // 여러 텍스트, 파일 전송 가능한 타입
         }
