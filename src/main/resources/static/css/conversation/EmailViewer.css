@@ -7,7 +7,7 @@
 
 .email-actions .action-link:hover { background-color: #e3e3e3; } 
 
-.email-title { font-size: 24px; margin: 10px 0; } 
+.email-subject { font-size: 24px; margin: 10px 0; } 
 
 .email-meta { font-size: 12px; color: #888; margin-bottom: 15px; } 
 
@@ -19,6 +19,6 @@
 
 .email-info .add-contact { color: #0073e6; text-decoration: underline; margin-left: 10px; } 
 
-.email-content { padding: 15px; border-radius: 4px; border-top: 1px solid #e3e3e3; } 
+.email-text { padding: 15px; border-radius: 4px; border-top: 1px solid #e3e3e3; } 
 
-.email-content p { margin: 10px 0; } 
+.email-text p { margin: 10px 0; } 

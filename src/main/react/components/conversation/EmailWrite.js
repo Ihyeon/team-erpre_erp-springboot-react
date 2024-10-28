@@ -14,9 +14,9 @@ function EmailWrite() {
   // 수신자
   const [to, setTo] = useState('');
   // 제목
-  const [title, setTitle] = useState('');
+  const [subject, setSubject] = useState('');
   // 본문
-  const [content, setContent] = useState('');
+  const [text, setText] = useState('');
   // 파일 첨부
   const [files, setFiles] = useState([]);
   // 전송 중 로딩 상태 default 값 필요
@@ -24,10 +24,65 @@ function EmailWrite() {
   // reactQuill은 ref로 
   const quillRef = useRef(null);
 
+  // 에러 메시지 상태
+  const [errors, setErrors] = useState({
+    to: '',
+    subject: '',
+    text: ''
+  });
+
+  // 공백일 시 에러 메세지
+  const validateForm = () => {
+    const newErrors = {
+      to: '',
+      subject: '',
+      text: ''
+    };
+    let isValid = true;
+
+    if (!to) {
+      newErrors.to = '받는사람 이메일을 입력해주세요';
+      isValid = false;
+    }
+    if (!subject) {
+      newErrors.subject = '제목을 입력해주세요';
+      isValid = false;
+    }
+    setErrors(newErrors);
+    return isValid;
+  }
+
+  // 받는사람 인풋 공백 시
+  const handleToChange = (e) => {
+    setTo(e.target.value);
+    if (errors.to) {
+      setErrors((prevErrors) => ({ //prevErrors 는 현재 모든 에러 메시지를 포함
+        ...prevErrors,
+        to: ''
+      }));
+    }
+  };
+
+  // 제목 인풋 공백 시
+  const handleSubjectChange = (e) => {
+    setSubject(e.target.value);
+    if (errors.subject) {
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        subject: ''
+      }));
+    }
+  };
+
+
+
+
   //파일 리스트 업데이트 함수 e 사용 / 파일 첨부 state 사용
   const handleFileList = (e) => {
     setFiles(e.target.files);
   }
+
+
   //보내기 함수 어싱크 사용 /
   // 로딩 상태 활성화 / 
   //이메일 데이터를 multipart 형식으로 서버에 전송하기 위해 사용 폼데이타를 새로은 변수 선언
@@ -35,11 +90,15 @@ function EmailWrite() {
   // 폼데이타에 이메일 제목 추가 / 
   // 폼데이타에 이메일 본문 추가 / 
   const handleSendEmail = async () => {
+
+    if (!validateForm()) {    //이메일 공백 유효성 검사
+      return;
+    }
     setLoading(true);
     const formData = new FormData(); // formData는 파일 업로드 폼데이터 저장하기 위한 객체
     formData.append('to', to); // append : 폼데이터에 ('to'라는 키 추가, to라는 현재의 상태값)
-    formData.append('subject', title);
-    formData.append('text', content);
+    formData.append('subject', subject);
+    formData.append('text', text);
 
     //파일 첨부 처리 반복문으로 폼데이타에 저장 / 첨부파일은 여러개
     for (let i = 0; i < files.length; i++) {
@@ -56,13 +115,13 @@ function EmailWrite() {
     try {
       const response = await axios.post('/api/email/send', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data' // 여러 텍스트, 파일 전송 가능한 타입
+          'Content-Type': 'multipart/form-data' // multipart 여러 텍스트, 파일 전송 가능한 타입
         }
       });
-      alert("메일 전송이 완료되었습니다.")
+      window.showToast("메일 전송이 완료되었습니다.")
     } catch (error) {
       console.log("메일 전송에 실패했습니다.", error);
-      alert("메일 전송에 실패했습니다");
+      window.showToast("메일 전송에 실패했습니다", 'error', 3000);
     } finally {
       setLoading(false);   // 이메일 전송 후 로딩 상태값 변경
     }
@@ -76,21 +135,8 @@ function EmailWrite() {
       <div className="email-compose-container">
         <div className="email-compose-container">
           {/* 상단 메뉴 */}
-          <div className="email-header">
-            <div>
-              {/* 1. 버튼 안에 로딩창 */}
-              <button
-                onClick={handleSendEmail}
-                disabled={loading}
-              >
-                <i className="bi bi-send"></i>
-                {loading ? '메일 전송중 ..' : '보내기'}
-              </button>
-              <a href="#">임시저장</a>
-            </div>
-          </div>
 
-          {/* 받는 사람, 제목 */}
+          {/* 받는 사람*/}
           <div className="email-field">
             <label htmlFor="to">받는 사람</label>
             <button><i className="bi bi-person-plus"></i></button>
@@ -98,22 +144,39 @@ function EmailWrite() {
               type="text"
               id="to"
               value={to}
-              onChange={(e) => setTo(e.target.value)}
+              onChange={(e) => handleToChange(e)}
               placeholder='수신자'
               required // 필수
+            // className={errors.to ? 'field_error' : 'field_ok'}
             />
+            {/* 공백 유효성 검사 */}
+            {errors.to && (
+              <p className='field_error_msg'>
+                <i className="bi bi-exclamation-circle-fill"></i>
+                {errors.to}
+              </p>
+            )}
           </div>
 
+          {/* 제목 */}
           <div className="email-field">
-            <label htmlFor="title">제목</label>
+            <label htmlFor="subject">제목</label>
             <input
               type="text"
-              id="title"
+              id="subject"
               placeholder="제목"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              value={subject}
+              onChange={(e) => handleSubjectChange(e)}
               required
+            // className={errors.subject ? 'field_error' : 'field_ok'}
             />
+            {/* 공백 유효성 검사 */}
+            {errors.subject && (
+              <p className='field_error_msg'>
+                <i className="bi bi-exclamation-circle-fill"></i>
+                {errors.subject}
+              </p>
+            )}
           </div>
 
           {/* 파일 첨부 */}
@@ -133,12 +196,28 @@ function EmailWrite() {
           </label>
 
           {/* 이메일 본문 + 편집기  */}
-          <ReactQuill
-            ref={quillRef} //ReactQuill에 ref 추가
-            className='email-textBody'
-            value={content}
-            onChange={(value) => setContent(value)} // reactQuill 같은 서드파티 편집기는 html 구조를 반환함 바로 value로 받음
-          />
+          <div className='email-text'>
+            <ReactQuill
+              ref={quillRef} //ReactQuill에 ref 추가
+              className='email-textBody'
+              value={text}
+              onChange={(value) => setText(value)} // reactQuill 같은 서드파티 편집기는 html 구조를 반환함 바로 value로 받음
+            />
+          </div>
+
+          <div className="email-footer">
+            <div>
+              {/* 1. 버튼 안에 로딩창 */}
+              <button
+                onClick={handleSendEmail}
+                disabled={loading}
+              >
+                <i className="bi bi-send icon-margin"></i>
+                {loading ? '메일 전송중 ..' : '보내기'}
+              </button>
+              <a href="#">임시저장</a>
+            </div>
+          </div>
 
         </div>
 

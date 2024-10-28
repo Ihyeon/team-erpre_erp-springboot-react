@@ -31,8 +31,8 @@ public class EmailSend {
     @Column(name = "email_subject_s", nullable = false)
     private String emailSubjectS;
 
-    @Column(name = "email_content_s", nullable = false)
-    private String emailContentS;
+    @Column(name = "email_text_s", nullable = false)
+    private String emailTextS;
 
     @Column(name = "email_date_s", nullable = false, insertable = false, updatable = false)
     private Timestamp emailDateS;
