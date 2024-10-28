@@ -6,6 +6,7 @@ import Layout from "../../layout/Layout";
 import ReactQuill from "react-quill"; // 본문 글 편집기
 import 'react-quill/dist/quill.snow.css'; // 편집기 기본 스타일
 import axios from 'axios';
+import { update } from 'lodash';
 
 
 // 컴포넌트
@@ -19,6 +20,8 @@ function EmailWrite() {
   const [text, setText] = useState('');
   // 파일 첨부
   const [files, setFiles] = useState([]);
+  // 첨부된 파일 이름 
+  const [fileNames, setFileNames] = useState([]);
   // 전송 중 로딩 상태 default 값 필요
   const [loading, setLoading] = useState(false);
   // reactQuill은 ref로 
@@ -75,12 +78,21 @@ function EmailWrite() {
   };
 
 
-
-
   //파일 리스트 업데이트 함수 e 사용 / 파일 첨부 state 사용
   const handleFileList = (e) => {
-    setFiles(e.target.files);
-  }
+    const newFiles = Array.from(e.target.files); // 파일들을 배열로 만듦
+    setFiles((prevFiles) => [...prevFiles, ...newFiles]);
+    setFileNames((prevFileNames) => [
+      ...prevFileNames,
+      ...newFiles.map(file => file.name) // 기존파일이 선택된 상태에서 새로운 파일 선택
+    ]);  // 배열을 순회하며, 이름만 추출 새로운 배열 생성 
+  };
+
+  //선택된 첨부파일 삭제
+  const removeFile = (index) => {
+    setFileNames((prevFiles) => prevFiles.filter((_, i) => i !== index));
+  };
+  
 
 
   //보내기 함수 어싱크 사용 /
@@ -146,7 +158,6 @@ function EmailWrite() {
               value={to}
               onChange={(e) => handleToChange(e)}
               placeholder='수신자'
-              required // 필수
             // className={errors.to ? 'field_error' : 'field_ok'}
             />
             {/* 공백 유효성 검사 */}
@@ -162,12 +173,12 @@ function EmailWrite() {
           <div className="email-field">
             <label htmlFor="subject">제목</label>
             <input
+              className='subject-input'
               type="text"
               id="subject"
               placeholder="제목"
               value={subject}
               onChange={(e) => handleSubjectChange(e)}
-              required
             // className={errors.subject ? 'field_error' : 'field_ok'}
             />
             {/* 공백 유효성 검사 */}
@@ -182,7 +193,7 @@ function EmailWrite() {
           {/* 파일 첨부 */}
           <label htmlFor="file-upload" className="file-label"> {/*htmlFor: file-upload라는 id의 input과 연결됨*/}
             <div className="file-attachment">
-              파일 첨부
+
               <input
                 type="file"
                 id="file-upload"
@@ -191,7 +202,20 @@ function EmailWrite() {
                 multiple //여러파일 선택
                 onChange={handleFileList}
               />
-              <div>여기로 파일을 끌어놓으세요</div>
+              <div>
+                {fileNames.length > 0 ? (
+                  fileNames.map((file, index) => (
+                    <div key={index}>
+                      <span>{file.name}</span>
+                      <button onClick={() => removeFile(index)}>
+                        <i class="bi bi-trash3"></i>
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  '파일첨부'
+                )}
+              </div>
             </div>
           </label>
 
