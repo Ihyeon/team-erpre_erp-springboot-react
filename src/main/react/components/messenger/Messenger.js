@@ -63,6 +63,7 @@ function Messenger({isOpen, toggleMessenger}) {
 
         // 🔴 채팅
         chatList,
+        refreshChatList,
         selectedChat,
         isChatModalOpen,
         openChatModal,
@@ -379,6 +380,7 @@ function Messenger({isOpen, toggleMessenger}) {
                         {activeView === 'chatList' &&
                             <ChatList
                                 chatList={chatList}
+                                refreshChatList={refreshChatList}
                                 formatDate={formatDate}
                                 selectedChat={selectedChat}
                                 isChatModalOpen={isChatModalOpen}

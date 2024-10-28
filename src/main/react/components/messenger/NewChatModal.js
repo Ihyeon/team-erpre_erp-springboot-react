@@ -4,8 +4,10 @@ import Pagination from "../common/Pagination";
 import axios from "axios";
 import {MdCheckCircle} from "react-icons/md";
 import {IoMdCheckmarkCircleOutline} from "react-icons/io";
+import {FaTrashAlt} from "react-icons/fa";
+import {TiDelete} from "react-icons/ti";
 
-const NewChatModal = ({ closeNewChatModal }) => {
+const NewChatModal = ({ closeNewChatModal, refreshChatList }) => {
 
     // 🔴 로딩 state
     const [isLoading, setLoading] = useState(false);
@@ -23,7 +25,6 @@ const NewChatModal = ({ closeNewChatModal }) => {
     const [currentPage, setCurrentPage] = useState(1); // 현재 페이지
     const [itemsPerPage, setItemsPerPage] = useState(10); // 페이지 당 직원 수
     const [totalItems, setTotalItems] = useState(0); // 총 직원 수
-
 
     // 🔴 직원 목록 조회
     const fetchData = useCallback(() => {
@@ -47,7 +48,7 @@ const NewChatModal = ({ closeNewChatModal }) => {
 
                 console.log("받아온 직원 데이터:", employee)
 
-                setEmployeeSearchResults(response.data.content);
+                setEmployeeSearchResults(employee);
                 setTotalItems(response.data.totalElements || 0);
                 setTotalPages(response.data.totalPages || 0);
             })
@@ -98,45 +99,81 @@ const NewChatModal = ({ closeNewChatModal }) => {
     // 🔴 직원 전체 선택/해제
     const handleSelectAll = (event) => {
         if (event.target.checked) {
-            const allEmployeeId = employeeSearchResults.map(employee => employee.employeeId);
-            setSelectedEmployees(allEmployeeId);
-
-            console.log(selectedEmployees);
+            const allEmployeesOnPage = employeeSearchResults.map(employee => ({
+                employeeId: employee.employeeId,
+                employeeName: employee.employeeName,
+                departmentName: employee.departmentName,
+                jobName: employee.jobName,
+            }));
+            setSelectedEmployees(prevSelected => {
+                const newSelected = [...prevSelected];
+                allEmployeesOnPage.forEach(employee => {
+                    if (!newSelected.some(selected => selected.employeeId === employee.employeeId)) {
+                        newSelected.push(employee);
+                    }
+                });
+                return newSelected;
+            });
         } else {
-            setSelectedEmployees([]);
+            const allEmployeeIdsOnPage = employeeSearchResults.map(employee => employee.employeeId);
+            setSelectedEmployees(prevSelected =>
+                prevSelected.filter(selected => !allEmployeeIdsOnPage.includes(selected.employeeId))
+            );
         }
-    }
+    };
 
-    // 🔴 페이지 이동시 전체 체크박스 해체
+    // 🔴 전체 선택 체크박스 상태를 업데이트
+    const isAllSelected = employeeSearchResults.length > 0 && employeeSearchResults.every(employee =>
+        selectedEmployees.some(selected => selected.employeeId === employee.employeeId)
+    );
+
+    // 🔴 페이지 이동 시 선택된 항목 상태 유지하는 로직
     useEffect(() => {
-        setSelectedEmployees([]);
-
-        const allSelectCheckbox = document.getElementById('all-select_checkbox');
+        const allSelectCheckbox = document.getElementById("all-select_checkbox");
         if (allSelectCheckbox) {
-            allSelectCheckbox.checked = false;
+            allSelectCheckbox.checked = isAllSelected;
         }
-    }, [currentPage]);
+    }, [isAllSelected, employeeSearchResults, selectedEmployees]);
 
     // 🔴 직원 개별 선택/해제
-    const handleSelectEmployee = (employeeId) => {
-        setSelectedEmployees(prevSelected => {
-            if (prevSelected.includes(employeeId)) {
-                return prevSelected.filter(cd => cd !== employeeId);
+    const handleSelectEmployee = (employeeId, employeeName, departmentName, jobName) => {
+        setSelectedEmployees((prevSelected) => {
+            const isAlreadySelected = prevSelected.some(
+                (selected) => selected.employeeId === employeeId
+            );
+            if (isAlreadySelected) {
+                return prevSelected.filter(
+                    (selected) => selected.employeeId !== employeeId
+                );
             } else {
-                return [...prevSelected, employeeId];
+                return [
+                    ...prevSelected,
+                    { employeeId, employeeName, departmentName, jobName },
+                ];
             }
         });
-        console.log(selectedEmployees);
+    };
 
+    // 🔴 선택된 직원 개별 삭제
+    const handleRemoveSelectedEmployee = (employeeId) => {
+        setSelectedEmployees(prevSelected =>
+            prevSelected.filter(employee => employee.employeeId !== employeeId)
+        );
     };
 
     // 🔴 채팅방 생성 함수
     const createChatRoom = async () => {
+
         try {
-            const response = await axios.post('/api/chatRooms', { participantIds: selectedEmployees });
-            const chatRoomId = response.data.chatRoomId;
-            // 채팅방 생성 후 해당 방으로 이동
-            navigateToChatRoom(chatRoomId);
+            const employeeIds = selectedEmployees.map(employee => employee.employeeId);
+
+            const response = await axios.post('/api/messengers/chat/create', employeeIds);
+
+            console.log('채팅방 생성 성공', response.data)
+
+            refreshChatList();
+            closeNewChatModal();
+
         } catch (error) {
             console.error("채팅방 생성 중 오류 발생:", error);
         }
@@ -170,12 +207,12 @@ const NewChatModal = ({ closeNewChatModal }) => {
                             </button>
                         )}
                     </div>
-                    <div>
+                    <div className="create-wrap">
                         <button
                             className="btn-create"
                             onClick={createChatRoom}
                         >
-                            <IoMdCheckmarkCircleOutline />
+                            시작
                         </button>
                     </div>
                 </div>
@@ -185,11 +222,13 @@ const NewChatModal = ({ closeNewChatModal }) => {
                         <thead>
                         <tr>
                             <th>
-                                <input
-                                    type="checkbox"
-                                    checked={selectedEmployees.length ===  employeeSearchResults.length}
-                                    onChange={handleSelectAll}
-                                />
+                                <div className="checkbox-container">
+                                    <input
+                                        type="checkbox"
+                                        checked={isAllSelected}
+                                        onChange={handleSelectAll}
+                                    />
+                                </div>
                             </th>
                             <th>이름</th>
                             <th>부서</th>
@@ -210,15 +249,17 @@ const NewChatModal = ({ closeNewChatModal }) => {
                         ) : employeeSearchResults.length > 0 ? (
                             /* 검색된 직원 목록을 출력 */
                             employeeSearchResults.map((employee) => (
-                                <tr key={employee.employeeId} onClick={() => handleSelectEmployee(employee.employeeId)}>
+                                <tr key={employee.employeeId} onClick={() => handleSelectEmployee(employee.employeeId, employee.employeeName, employee.departmentName, employee.jobName)}>
                                     {/* 체크박스 */}
                                     <td>
+                                        <div className="checkbox-container">
                                         <input
                                             type="checkbox"
-                                            checked={selectedEmployees.includes(employee.employeeId)}
+                                            checked={selectedEmployees.some(selected => selected.employeeId === employee.employeeId)} // 수정 부분
                                             onClick={(e) => e.stopPropagation()}
-                                            onChange={() => handleSelectEmployee(employee.employeeId)}
+                                            onChange={() => handleSelectEmployee(employee.employeeId, employee.employeeName, employee.departmentName, employee.jobName)}
                                         />
+                                        </div>
                                     </td>
                                     {/* 직원 이름 */}
                                     <td>{employee.employeeName || '-'}</td>
@@ -237,6 +278,29 @@ const NewChatModal = ({ closeNewChatModal }) => {
                         )}
                         </tbody>
                     </table>
+
+                </div>
+                {/* 선택된 직원 목록 */}
+                <div className="selected-employees">
+                    <ul className="selected-employees-list">
+                        {selectedEmployees.map((employee) => (
+                            <li
+                                key={employee.employeeId}
+                                className="selected-employee-item"
+                                onClick={() => handleRemoveSelectedEmployee(employee.employeeId)}
+                            >
+                                {employee.employeeName}
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRemoveSelectedEmployee(employee.employeeId);
+                                    }}
+                                >
+                                    <TiDelete/>
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
                 </div>
 
                 {/* 페이지네이션 */}

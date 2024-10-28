@@ -66,13 +66,11 @@ public class MessengerController {
         return messengerService.getChatListByUser(searchKeyword);
     }
 
-//    // 새 채팅방 생성
-//    @PostMapping("/chat/create")
-//    public ResponseEntity<ChatDTO> createChatRoom(@RequestBody List<String> participantIds) {
-//        ChatDTO newChatRoom = MessengerService.createChatRoom(participantIds);
-//        return ResponseEntity.ok(newChatRoom);
-//    }
-
-
+    // 새 채팅방 생성
+    @PostMapping("/chat/create")
+    public ResponseEntity<ChatDTO> createChatRoom(@RequestBody List<String> participantIds) {
+        ChatDTO newChatRoom = messengerService.createChatRoom(participantIds);
+        return ResponseEntity.ok(newChatRoom);
+    }
 
 }
