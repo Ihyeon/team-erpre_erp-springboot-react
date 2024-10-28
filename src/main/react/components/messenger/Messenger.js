@@ -105,42 +105,83 @@ function Messenger({isOpen, toggleMessenger}) {
     }, [treeData]);
 
     // 서버에서 받은 평면 데이터를 트리 구조로 변환하는 함수
-    const buildTreeData = (data) => {
-        const departmentMap = {};
-        const tree = [
-            {
-                key: "0",
-                title: "Erpre",
-                icon: <span>🍎</span>,
-                children: []
+    // const buildTreeData = (data) => {
+    //     const departmentMap = {};
+    //     const tree = [
+    //         {
+    //             key: "0",
+    //             title: "Erpre",
+    //             icon: <span>🍎</span>,
+    //             children: []
+    //         }
+    //     ];
+
+        const buildTreeData = (data) => {
+            if (!Array.isArray(data)) {
+                console.warn('data가 배열이 아닙니다. 빈 배열로 설정합니다.');
+                data = [];
             }
-        ];
 
-        // 각 직원 데이터를 부서별로 그룹화
-        data.forEach(employee => {
-            const departmentName = employee.departmentName;
-            const employeeNode = {
-                key: employee.employeeId,
-                title: employee.employeeName,
-                isLeaf: true
-            };
-
-            // 해당 부서가 이미 존재하는지 확인
-            if (!departmentMap[departmentName]) {
-                const departmentNode = {
-                    key: employee.departmentId,
-                    title: departmentName,
+            const departmentMap = {};
+            const tree = [
+                {
+                    key: "0",
+                    title: "Erpre",
+                    icon: <span>🍎</span>,
                     children: []
+                }
+            ];
+
+    //     // 각 직원 데이터를 부서별로 그룹화
+    //     data.forEach(employee => {
+    //         const departmentName = employee.departmentName;
+    //         const employeeNode = {
+    //             key: employee.employeeId,
+    //             title: employee.employeeName,
+    //             isLeaf: true
+    //         };
+    //
+    //         // 해당 부서가 이미 존재하는지 확인
+    //         if (!departmentMap[departmentName]) {
+    //             const departmentNode = {
+    //                 key: employee.departmentId,
+    //                 title: departmentName,
+    //                 children: []
+    //             };
+    //             departmentMap[departmentName] = departmentNode;
+    //             tree[0].children.push(departmentNode);
+    //         }
+    //
+    //         departmentMap[departmentName].children.push(employeeNode);
+    //     });
+    //
+    //     return tree;
+    // }
+
+            // 각 직원 데이터를 부서별로 그룹화
+            data.forEach(employee => {
+                const departmentName = employee.departmentName;
+                const employeeNode = {
+                    key: employee.employeeId,
+                    title: employee.employeeName,
+                    isLeaf: true
                 };
-                departmentMap[departmentName] = departmentNode;
-                tree[0].children.push(departmentNode);
-            }
 
-            departmentMap[departmentName].children.push(employeeNode);
-        });
+                if (!departmentMap[departmentName]) {
+                    const departmentNode = {
+                        key: employee.departmentId,
+                        title: departmentName,
+                        children: []
+                    };
+                    departmentMap[departmentName] = departmentNode;
+                    tree[0].children.push(departmentNode);
+                }
 
-        return tree;
-    }
+                departmentMap[departmentName].children.push(employeeNode);
+            });
+
+            return tree;
+        }
 
     // 상태 메시지 저장 여부 확인 창
     function handleStatusMessageSave() {
