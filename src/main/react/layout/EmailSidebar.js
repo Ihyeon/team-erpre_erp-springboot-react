@@ -93,14 +93,14 @@ function EmailSidebar({ currentMenu }) {
 
                     <div className={`mail-write-span ${currentMenu.startsWith('emailWrite') ? 'active' : ''}`} onClick={() => handleSubMenuClick('emailWrite', '/email')}>
                         <button className="mail-write" href="#" >
-                            <i className="bi bi-pencil-square"></i>메일 작성
+                            <i className="bi bi-pencil-square icon-margin"></i>메일 작성
                         </button>
                     </div>
 
                     <hr className='mail-line' />
 
                     <span className={currentMenu.startsWith('order') ? 'active' : ''}>
-                        <i className="bi bi-mailbox2-flag"></i>메일함
+                        <i className="bi bi-mailbox2-flag icon-margin"></i>메일함
                     </span>
                     <ul className="submenu">
                         <li className={currentMenu === 'receivedMail' ? 'active' : ''}>
@@ -117,7 +117,7 @@ function EmailSidebar({ currentMenu }) {
                 </li>
                 <li>
                     <span className={currentMenu.startsWith('product') ? 'active' : ''}>
-                        <i className="bi bi-inboxes-fill"></i>메일 관리
+                        <i className="bi bi-inboxes-fill icon-margin"></i>메일 관리
                     </span>
                     <ul className="submenu">
                         <li className={currentMenu === 'draftMailBox' ? 'active' : ''}>

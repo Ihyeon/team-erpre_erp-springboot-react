@@ -27,10 +27,10 @@ public class EmailService {
     public EmailSend sendEmail(String to, String subject, String text, List<MultipartFile> files) {
 
         try {
-            MimeMessage message = mailSender.createMimeMessage(); // 이메일 메세지 생성
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8"); // true: 첨부파일 지원을 의미
+            MimeMessage message = mailSender.createMimeMessage(); //이메일 메세지 생성
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8"); //true: 첨부파일 지원을 의미
 
-            // 수신자
+            //수신자
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(text, true);
@@ -38,7 +38,7 @@ public class EmailService {
 
             //첨부파일
             if (files != null && !files.isEmpty()) {
-                for (MultipartFile file : files) {
+                for (MultipartFile file : files) { //첨부파일과 같은 업로드된 파일을 처리하는데 사용됨
                     File tempFile = File.createTempFile("upload-", file.getOriginalFilename());
                     file.transferTo(tempFile);
                     FileSystemResource fileResource = new FileSystemResource(tempFile);
@@ -48,12 +48,12 @@ public class EmailService {
             //이메일 전송
             mailSender.send(message);
 
-            // EmailSend 엔티티 생성 및 저장
+            //EmailSend 엔티티 생성 + 저장
             EmailSend emailSend = new EmailSend();
-            emailSend.setEmailIdS("E001");
+            emailSend.setEmailIdS("E001"); // 직원아이디 
             emailSend.setEmailAddrReceiveS(to);
             emailSend.setEmailSubjectS(subject);
-            emailSend.setEmailContentS(text);
+            emailSend.setEmailTextS(text);
             emailSend.setEmailStatusS("nr");
             emailSend.setEmailDateS(new Timestamp(System.currentTimeMillis()));
 

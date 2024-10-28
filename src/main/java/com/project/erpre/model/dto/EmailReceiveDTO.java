@@ -18,7 +18,7 @@ public class EmailReceiveDTO {
     private String emailIdR;  // 수신 직원 ID
     private String emailAddrSendR;  // 발신 직원 이메일
     private String emailSubjectR;
-    private String emailContentR;
+    private String emailTextR;
     private Timestamp emailDateR;
     private String emailStatusR;  // 이메일 상태 (nr, r, nd, d) 기본값 'nr'
 

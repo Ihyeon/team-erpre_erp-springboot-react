@@ -30,8 +30,8 @@ public class EmailReceive {
     @Column(name = "email_subject_r", nullable = false)
     private String emailSubjectR;
 
-    @Column(name = "email_content_r", nullable = false)
-    private String emailContentR;
+    @Column(name = "email_text_r", nullable = false)
+    private String emailTextR;
 
     @Column(name = "email_date_r", nullable = false, insertable = false, updatable = false)
     private Timestamp emailDateR;

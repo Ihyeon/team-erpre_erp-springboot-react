@@ -17,7 +17,7 @@ function EmailViewer() {
           <a href="#" className="action-link delete">삭제</a>
         </div>
 
-        <h1 className="email-title">안녕하세요</h1>
+        <h1 className="email-subject">안녕하세요</h1>
 
         <div className="email-meta">
           <span>2019-08-28 13:44:25</span>
@@ -28,7 +28,7 @@ function EmailViewer() {
           <p>받는 사람: 이순신 <span className="email-address"><a href="#">abc2@abc2.com</a></span> <a href="#" className="add-contact">주소추가</a></p>
         </div>
 
-        <div className="email-content">
+        <div className="email-text">
           <p>안녕하세요. 홍길동입니다.</p>
           <p>어제 회의 때 요청 드린 엑셀 파일 공유 받을 수 있을까요?</p>
           <p>감사합니다.</p>      
