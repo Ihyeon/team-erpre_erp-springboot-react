@@ -265,7 +265,7 @@
 }
 /* 직원 검색 */
 .modal_container.search_employee .table_wrap table th:nth-child(1),
-.modal_container.search_employee .table_wrap table td:nth-child(1), { width: 16%; cursor: pointer; /* 체크박스 */ }
+.modal_container.search_employee .table_wrap table td:nth-child(1) { width: 16%; cursor: pointer; /* 체크박스 */ }
 .modal_container.search_employee .table_wrap table th:nth-child(2),
 .modal_container.search_employee .table_wrap table td:nth-child(2) { width: 28%; /* 이름 */ }
 .modal_container.search_employee .table_wrap table th:nth-child(3),
