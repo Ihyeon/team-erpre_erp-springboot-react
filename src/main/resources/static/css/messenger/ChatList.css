@@ -77,18 +77,18 @@
 }
 
 .chat-icon-grid .chat-icon.icon1 {
-    color: #1D84B5;
+    color: black;
 }
 
-.chat-icon-grid .chat-icon.icon2  {
+.chat-icon-grid .chat-icon.icon2 {
     color: #FF6B6B;
 }
 
-.chat-icon-grid .chat-icon.icon3  {
+.chat-icon-grid .chat-icon.icon3 {
     color: #4ECDC4;
 }
 
-.chat-icon-grid .chat-icon.icon4  {
+.chat-icon-grid .chat-icon.icon4 {
     color: #FFD93D;
 }
 
@@ -233,42 +233,177 @@
 }
 
 /* 🟡 새 채팅 모달 */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #73737375; display: flex; align-items: center; justify-content: center; z-index: 2000;}
-.modal_container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 1px solid #ccc; border-radius: 20px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); width: 40%; z-index: 2100; padding: 25px; display: flex; flex-direction: column; gap: 5px; overflow: hidden;}
-.modal_container.modal_container.search { height: 600px !important; width: 450px !important; color: black;}
-.search_wrap { justify-content: space-between !important;}
-.btn-create {
-    background: none; border: none; outline: none; color: #333; font-size: 23px;
-    cursor: pointer; line-height: 1;
-    padding: 4px 4px; position: relative; display: flex; align-items: center; justify-content: center;
-    transition: background-color 0.3s, border-radius 0.3s;}
-
-.btn-create::after { content: "시작하기"; position: absolute; font-size: 16px; color: #efcb23; opacity: 0;
-    right: 5px;
-    width: 60px;
-    border: 1px solid #efcb23;
-    border-radius: 7px;
-    padding: 3px;
-    transition: opacity 0.3s, transform 0.3s;
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #73737375;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
 }
+
+.modal_container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 40%;
+    z-index: 2100;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    overflow: hidden;
+}
+
+.modal_container.modal_container.search {
+    height: 600px !important;
+    width: 450px !important;
+    color: black;
+}
+
+.search_wrap {
+    justify-content: space-between !important;
+}
+
+.create-wrap {
+    display: flex;
+    align-items: center;
+}
+
+.btn-create {
+    background: none;
+    border: none;
+    outline: none;
+    color: #333;
+    font-size: 16px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 6px 12px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s, border-radius 0.3s;
+}
+
 .btn-create:hover {
-    padding: 4px 12px;
     background-color: #f0f0f0;
     border-radius: 20px;
 }
-.btn-create:hover::after {
-    opacity: 1;
-    transform: scale(1);
-}
+
 .btn-create:hover svg {
-    visibility: hidden
+    display: none;
 }
+
+.pagination-container .pagination .box.active {
+    background-color: #f0f0f0 !important;
+    border-color: #f0f0f0 !important;
+    color: #333 !important;
+}
+
 /* 직원 검색 */
 .modal_container.search_employee .table_wrap table th:nth-child(1),
-.modal_container.search_employee .table_wrap table td:nth-child(1) { width: 16%; cursor: pointer; /* 체크박스 */ }
+.modal_container.search_employee .table_wrap table td:nth-child(1) {
+    width: 16%;
+    cursor: pointer; /* 체크박스 */
+}
 .modal_container.search_employee .table_wrap table th:nth-child(2),
-.modal_container.search_employee .table_wrap table td:nth-child(2) { width: 28%; /* 이름 */ }
+.modal_container.search_employee .table_wrap table td:nth-child(2) {
+    width: 28%; /* 이름 */
+}
+
 .modal_container.search_employee .table_wrap table th:nth-child(3),
-.modal_container.search_employee .table_wrap table td:nth-child(3) { width: 28%; /* 부서 */ }
+.modal_container.search_employee .table_wrap table td:nth-child(3) {
+    width: 28%; /* 부서 */
+}
+
 .modal_container.search_employee .table_wrap table th:nth-child(4),
-.modal_container.search_employee .table_wrap table td:nth-child(4) { width: 28%; /* 직급 */ }
+.modal_container.search_employee .table_wrap table td:nth-child(4) {
+    width: 28%; /* 직급 */
+}
+
+/* 선택된 직원 목록 */
+.selected-employees {
+    margin: 10px 0;
+}
+
+.selected-employees-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.selected-employee-item {
+    display: flex;
+    align-items: center;
+    background-color: #f0f0f0;
+    padding: 5px 10px;
+    border-radius: 15px;
+    color: #333;
+}
+
+.selected-employee-item button {
+    background: none;
+    border: none;
+    color: #545252;
+    font-size: 23px;
+    cursor: pointer;
+    margin-left: 2px;
+    display: flex;
+    align-items: center;
+}
+
+/* 체크박스 */
+.checkbox-container {
+    display: inline-block;
+    position: relative;
+}
+
+.checkbox-container input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+    position: relative;
+}
+
+.checkbox-container input[type="checkbox"]:checked {
+    background-color: #4ECDC4;
+    border-color: #4ECDC4;
+}
+
+.checkbox-container input[type="checkbox"]:checked::before {
+    content: "✓";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 14px;
+}
+
+/* 우클릭 메뉴 */
+.context-menu {
+    position: absolute;
+    z-index: 20000;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}

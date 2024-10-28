@@ -157,6 +157,20 @@ export const useMessengerHooks = () => {
         localStorage.removeItem('selectedChat');
         localStorage.setItem('isChatModalOpen', false);
     };
+
+    // 🔴 채팅 목록 새로고침 함수
+    const refreshChatList = () => {
+        setIsLoading(true);
+        axios.get('/api/messengers/chat/chatList')
+            .then((response) => {
+                setChatList(response.data);
+                setIsLoading(false);
+            })
+            .catch((error) => {
+                console.error("채팅 목록을 새로 고치는 중 오류 발생:", error);
+                setIsLoading(false);
+            });
+    };
     
     // 🟢 날짜 변환 함수
     const formatDate = (dateString) => {
@@ -200,6 +214,7 @@ export const useMessengerHooks = () => {
 
         // 🔴 채팅
         chatList,
+        refreshChatList,
         selectedChat,
         isChatModalOpen,
         openChatModal,

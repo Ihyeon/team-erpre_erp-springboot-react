@@ -20,6 +20,9 @@ public class Chat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long chatNo;
 
+    @Column(name = "chat_origin_title", length = 50, nullable = false)
+    private String chatOriginTitle;
+
     @OneToMany(mappedBy = "chat")
     @JsonIgnore
     @ToString.Exclude

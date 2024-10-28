@@ -36,6 +36,7 @@ public class ChatRepositoryImpl implements ChatRepositoryCustom {
         return queryFactory
                 .select(Projections.constructor(ChatDTO.class,
                         chat.chatNo,
+                        chat.chatOriginTitle,
                         chatParticipant.chatTitle,
                         chatParticipant.chatParticipantId.participantId,
                         chatParticipant.employee.employeeName,
@@ -59,6 +60,7 @@ public class ChatRepositoryImpl implements ChatRepositoryCustom {
                         .and(searchKeywordIsNullOrEmpty(searchKeyword)))
                 .groupBy(
                         chat.chatNo,
+                        chat.chatOriginTitle,
                         chatParticipant.chatTitle,
                         chatParticipant.chatParticipantId.participantId,
                         chatParticipant.employee.employeeName,

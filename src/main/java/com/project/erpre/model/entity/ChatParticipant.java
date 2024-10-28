@@ -30,4 +30,13 @@ public class ChatParticipant {
     @JoinColumn(name = "participant_id", nullable = false)
     private Employee employee;
 
+
+    // Chat과 Employee를 인자로 받아 ChatParticipantId를 설정하는 생성자
+    public ChatParticipant(Chat chat, Employee employee) {
+        this.chat = chat;
+        this.employee = employee;
+        this.chatParticipantId = new ChatParticipantId(chat.getChatNo(), employee.getEmployeeId());
+        this.chatTitle = chat.getChatOriginTitle();
+    }
+
 }
