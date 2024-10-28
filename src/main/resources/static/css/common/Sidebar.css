@@ -25,7 +25,7 @@
 .mail-line { border: 1px solid #e1e1e1; margin-top: 15px; margin-bottom: 10px; } 
 .menu-back { cursor:pointer } 
 .menu-back:hover { background-color: #f4f4f4; } 
-.icon-margin { margin-right: 3px;}
+.icon-margin { margin-right: 10px;}
 
 
 /* 단일 메뉴 */

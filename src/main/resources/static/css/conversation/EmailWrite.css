@@ -7,11 +7,15 @@
 /* 이메일 필드 (받는 사람, 참조, 제목) */
 .email-field { display: flex; align-items: center; margin-bottom: 15px; margin-top: 20px; } 
 
-.email-field label { width: 100px; font-weight: bold; } 
+.email-field label { width: 100px; font-weight: bold; text-align: center; } 
 
-.email-field input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; } 
+.email-field input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; margin-left: 6px; } 
 
 .email-field input:focus { border-color: #007CC1; outline: none; } 
+
+.email-field input::placeholder { user-select: none; } 
+
+.subject-input { margin-left: 21px !important; } 
 
 /* 파일 첨부 영역 */
 .file-attachment { padding: 10px; margin-top:44px; margin-bottom: 20px; background-color: #f9f9f9; border: 1px dashed #ddd; text-align: center; border-radius: 4px; cursor: pointer; user-select: none; } 
