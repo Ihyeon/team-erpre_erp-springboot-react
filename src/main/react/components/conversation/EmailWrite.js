@@ -20,8 +20,8 @@ function EmailWrite() {
   const [text, setText] = useState('');
   // 파일 첨부
   const [files, setFiles] = useState([]);
-  // 첨부된 파일 이름 
-  const [fileNames, setFileNames] = useState([]);
+  // 첨부된 파일 이름 + 용량
+  const [fileInfo, setFileInfo] = useState([]);
   // 전송 중 로딩 상태 default 값 필요
   const [loading, setLoading] = useState(false);
   // reactQuill은 ref로 
@@ -80,19 +80,28 @@ function EmailWrite() {
 
   //파일 리스트 업데이트 함수 e 사용 / 파일 첨부 state 사용
   const handleFileList = (e) => {
-    const newFiles = Array.from(e.target.files); // 파일들을 배열로 만듦
-    setFiles((prevFiles) => [...prevFiles, ...newFiles]);
-    setFileNames((prevFileNames) => [
-      ...prevFileNames,
-      ...newFiles.map(file => file.name) // 기존파일이 선택된 상태에서 새로운 파일 선택
-    ]);  // 배열을 순회하며, 이름만 추출 새로운 배열 생성 
+    const newFiles = Array.from(e.target.files); // 새로 선택한 파일들
+    setFiles((prevFiles) => [...prevFiles, ...newFiles]); // files에 이전 선택 파일 + 새로 선택 파일 저장
+    setFileInfo((prevFilesInfo) => [
+      ...prevFilesInfo,
+      ...newFiles.map((file) => ({ name: file.name, size: (file.size / 1024).toFixed(2) + 'KB' })) //파일 크기를 KB로 변환하고 소수점 두자리까지
+    ]);
   };
+
+
+
 
   //선택된 첨부파일 삭제
   const removeFile = (index) => {
-    setFileNames((prevFiles) => prevFiles.filter((_, i) => i !== index));
+    setFiles((prevFile) => prevFile.filter((_, i) => i !== index));
+    setFileInfo((prevFileInfo) => prevFileInfo.filter((_, i) => i !== index));
   };
-  
+
+  //첨부 버튼을 input으로 연결
+  const connectFileUpload = () => {
+    document.getElementById('file-upload').click();
+  };
+
 
 
   //보내기 함수 어싱크 사용 /
@@ -131,6 +140,11 @@ function EmailWrite() {
         }
       });
       window.showToast("메일 전송이 완료되었습니다.")
+      setTo('');
+      setSubject('');
+      setText('');
+      setFiles([]);
+      setFileInfo([]);
     } catch (error) {
       console.log("메일 전송에 실패했습니다.", error);
       window.showToast("메일 전송에 실패했습니다", 'error', 3000);
@@ -150,7 +164,7 @@ function EmailWrite() {
 
           {/* 받는 사람*/}
           <div className="email-field">
-            <label htmlFor="to">받는 사람</label>
+            <label htmlFor="to">받는사람</label>
             <button><i className="bi bi-person-plus"></i></button>
             <input
               type="text"
@@ -190,31 +204,51 @@ function EmailWrite() {
             )}
           </div>
 
-          {/* 파일 첨부 */}
-          <label htmlFor="file-upload" className="file-label"> {/*htmlFor: file-upload라는 id의 input과 연결됨*/}
-            <div className="file-attachment">
+          {/* 파일첨부 */}
+          <div className="email-field">
+            <label htmlFor="file-upload" className="file-label">파일첨부</label> {/*htmlFor: file-upload라는 id의 input과 연결됨*/}
+            <button
+              className='subject-input file-btn'
+              type="text"
+              id="file"
+              onClick={connectFileUpload}
+            >
+              내 PC
+            </button>
 
-              <input
-                type="file"
-                id="file-upload"
-                accept='image/png, image/jpeg, application/pdf'
-                className='file-upload-input'
-                multiple //여러파일 선택
-                onChange={handleFileList}
-              />
+            <input
+              type="file"
+              id="file-upload"
+              accept='image/png, image/jpeg, application/pdf'
+              className='file-upload-input'
+              multiple //여러파일 선택
+              onChange={handleFileList}
+            />
+          </div>
+
+          {/* 파일 첨부 box*/}
+          <label >
+            <div className="file-attachment">
               <div>
-                {fileNames.length > 0 ? (
-                  fileNames.map((file, index) => (
-                    <div key={index}>
-                      <span>{file.name}</span>
-                      <button onClick={() => removeFile(index)}>
-                        <i class="bi bi-trash3"></i>
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  '파일첨부'
-                )}
+
+                <div>
+                  <span>파일명</span>
+                  <span>용량</span>
+                  {fileInfo.length > 0 ? (
+                    fileInfo.map((files, index) => (
+                      <div key={index}>
+                        <span onClick={() => removeFile(index)}>
+                          <i className="bi bi-trash3"></i>
+                        </span>
+                        <span>{files.name}</span>
+                        <span>{files.size}</span>
+                      </div>
+                    ))
+                  ) : (
+                    '선택한 파일이 이곳에 표시됩니다'
+                  )}
+
+                </div>
               </div>
             </div>
           </label>
