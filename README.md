@@ -20,7 +20,7 @@
 
 | **👑조예원** | **김호진** | **박서희** | **손민석** |**심유정** |**한정우** |
 | :------: |  :------: | :------: | :------: |:------: |:------: |
-| [<img src="https://avatars.githubusercontent.com/yewon31" height=90> <br/> @yewon31](https://github.com/yewon31) | [<img src="https://avatars.githubusercontent.com/hjKim1597" height=90> <br/> @hjKim1597](https://github.com/hjKim1597) | [<img src="https://avatars.githubusercontent.com/FORrri" height=90> <br/> @FORrri](https://github.com/FORrri) | [<img src="https://avatars.githubusercontent.com/huhuhahahaha" height=90> <br/> @huhuhahahaha](https://github.com/huhuhahahaha) |[<img src="https://avatars.githubusercontent.com/I2hyeon" height=90> <br/> @I2hyeon](https://github.com/I2hyeon) |[<img src="https://avatars.githubusercontent.com/groovyplanet" height=90> <br/> @groovyplanet](https://github.com/groovyplanet) |
+| [<img src="https://avatars.githubusercontent.com/yewon31" height=90> <br/> @yewon31](https://github.com/yewon31) | [<img src="https://avatars.githubusercontent.com/hjKim1597" height=90> <br/> @hjKim1597](https://github.com/hjKim1597) | [<img src="https://avatars.githubusercontent.com/FORrri" height=90> <br/> @FORrri](https://github.com/FORrri) | [<img src="https://avatars.githubusercontent.com/huhuhahahaha" height=90> <br/> @huhuhahahaha](https://github.com/huhuhahahaha) |[<img src="https://avatars.githubusercontent.com/I2hyeon" height=90> <br/> @Ihyeon](https://github.com/I2hyeon) |[<img src="https://avatars.githubusercontent.com/groovyplanet" height=90> <br/> @groovyplanet](https://github.com/groovyplanet) |
 
 <br/>
 
