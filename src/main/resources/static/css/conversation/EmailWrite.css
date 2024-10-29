@@ -7,9 +7,9 @@
 /* 이메일 필드 (받는 사람, 참조, 제목) */
 .email-field { display: flex; align-items: center; margin-bottom: 15px; margin-top: 20px; } 
 
-.email-field label { width: 100px; font-weight: bold; text-align: center; } 
+.email-field label { width: 100px; } 
 
-.email-field input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; margin-left: 6px; } 
+.email-field input { width: 100%; padding: 8px; border: none; border-bottom: 1px solid #ddd; font-size: 12px; margin-left: 6px; } 
 
 .email-field input:focus { border-color: #007CC1; outline: none; } 
 
@@ -18,13 +18,19 @@
 .subject-input { margin-left: 21px !important; } 
 
 /* 파일 첨부 영역 */
-.file-attachment { padding: 10px; margin-top:44px; margin-bottom: 20px; background-color: #f9f9f9; border: 1px dashed #ddd; text-align: center; border-radius: 4px; cursor: pointer; user-select: none; } 
+.file-attachment { padding: 10px; margin-top: 20px; margin-bottom: -12px; background-color: #f9f9f9; border: 1px dashed #ddd; border-radius: 4px; user-select: none; height: auto; font-size: 13px; color: #007CC1; overflow:hidden;} 
 
-.file-label { color: #007CC1; /* font-weight: bold; */ } 
+.file-label { } 
 
 .file-upload-input { display: none; } 
 
 .file-attachment:hover { background-color: #e9f5fb; } 
+
+.file-btn { border: 1px solid #a0a0a3; border-radius: 4px; text-align: center; width: 55px; height: 27px; font-size: 13px; color: #888787; margin-left: 14px !important; margin-top: 6px; } 
+
+.file-btn:hover { background-color: #e9f5fb; } 
+
+.file-icon { margin-left: -15px; } 
 
 /* 본문 영역 */
 .email-text { margin-top: 45px; } 
