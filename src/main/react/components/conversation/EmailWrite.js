@@ -81,11 +81,28 @@ function EmailWrite() {
   //파일 리스트 업데이트 함수 e 사용 / 파일 첨부 state 사용
   const handleFileList = (e) => {
     const newFiles = Array.from(e.target.files); // 새로 선택한 파일들
+    const maxFiles = 5; // 최대 첨부파일 갯수
+    const maxSize = 10 * 1024 * 1024 // 10MB 제한
+
+    if (files.length + newFiles.length > maxFiles) {
+      window.showToast("파일첨부는 최대 5개까지 가능합니다.", 'error', 3000);
+      return;
+    }
+
+    const oversizedFiles = newFiles.some((file) => file.size > maxSize); // newFiles(선택된 파일배열)에서 file의 사이즈가 위에 설정한 maxSize보다 클경우 저장
+    if (oversizedFiles) {
+      window.showToast("첨부된 파일이 10MB 제한을 초과했습니다.", 'error', 3000);
+      return;
+    }
+
+
     setFiles((prevFiles) => [...prevFiles, ...newFiles]); // files에 이전 선택 파일 + 새로 선택 파일 저장
     setFileInfo((prevFilesInfo) => [
       ...prevFilesInfo,
       ...newFiles.map((file) => ({ name: file.name, size: (file.size / 1024).toFixed(2) + 'KB' })) //파일 크기를 KB로 변환하고 소수점 두자리까지
     ]);
+
+    e.target.value = null; //파일 중복 추가를 위한 input 값 초기화
   };
 
 
@@ -224,32 +241,50 @@ function EmailWrite() {
               multiple //여러파일 선택
               onChange={handleFileList}
             />
+            <p>
+              <span>
+                일반 0KB/10MB
+              </span>
+              
+            </p>
+
           </div>
 
           {/* 파일 첨부 box*/}
           <label >
             <div className="file-attachment">
-              <div>
+              {fileInfo.length > 0 && (
+                <table>
+                  <thead>
+                    <tr className='fileBox-title'>
+                      <th className='fileBox-delete-icon'></th>
+                      <th>파일명</th>
+                      <th>용량</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {fileInfo.map((files, index) => (
+                      <tr key={index} className='file-map'>
+                        <td className='fileBox-delete-icon'>
+                          <span onClick={() => removeFile(index)}>
+                            <i className="bi bi-trash3 file-delete-icon"></i>
+                          </span>
+                        </td>
+                        <td className='file-name'>{files.name}</td>
+                        <td className='file-size'>{files.size}</td>
+                      </tr>
+                    ))}
 
-                <div>
-                  <span>파일명</span>
-                  <span>용량</span>
-                  {fileInfo.length > 0 ? (
-                    fileInfo.map((files, index) => (
-                      <div key={index}>
-                        <span onClick={() => removeFile(index)}>
-                          <i className="bi bi-trash3"></i>
-                        </span>
-                        <span>{files.name}</span>
-                        <span>{files.size}</span>
-                      </div>
-                    ))
-                  ) : (
-                    '선택한 파일이 이곳에 표시됩니다'
-                  )}
+                  </tbody>
+                </table>
 
+              )}
+              {fileInfo.length === 0 && (
+                <div className='no-files-message'>
+                  선택한 파일이 이곳에 표시됩니다
                 </div>
-              </div>
+              )}
+
             </div>
           </label>
 
