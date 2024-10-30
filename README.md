@@ -2,7 +2,7 @@
 
 ## Release Notes
 
-### v1.0.0 (2024-09-30)
+### v1.0.0 (2024-10-02)
 - **첫 번째 릴리스: 기본 ERP 영업 시스템 기능 구현**
   - 직원/고객 관리
   - 카테고리/상품 관리
@@ -12,15 +12,15 @@
   - 주문 현황 보고서 차트
 
 - **기업 연계 프로젝트** with ㈜ 쉐어드원
-- **개발 기간** : `2024/09/02 ~ 09/27` (4주)
+- **개발 기간** : `2024/10/02 ~ 11/12` (4주)
 - **시연영상** : https://www.youtube.com/watch?v=da2D4uyioXY
 <br/>
 
 ## 🪅 팀원
 
-| **👑조예원** | **김호진** | **박서희** | **손민석** |**심유정** |**한정우** |
-| :------: |  :------: | :------: | :------: |:------: |:------: |
-| [<img src="https://avatars.githubusercontent.com/yewon31" height=90> <br/> @yewon31](https://github.com/yewon31) | [<img src="https://avatars.githubusercontent.com/hjKim1597" height=90> <br/> @hjKim1597](https://github.com/hjKim1597) | [<img src="https://avatars.githubusercontent.com/FORrri" height=90> <br/> @FORrri](https://github.com/FORrri) | [<img src="https://avatars.githubusercontent.com/huhuhahahaha" height=90> <br/> @huhuhahahaha](https://github.com/huhuhahahaha) |[<img src="https://avatars.githubusercontent.com/I2hyeon" height=90> <br/> @Ihyeon](https://github.com/I2hyeon) |[<img src="https://avatars.githubusercontent.com/groovyplanet" height=90> <br/> @groovyplanet](https://github.com/groovyplanet) |
+| **👑심유정** | **김호진** | **박서희** | **손민석** |
+| :------: |  :------: | :------: | :------: |
+|[<img src="https://avatars.githubusercontent.com/Ihyeon" height=90> <br/> @Ihyeon](https://github.com/Ihyeon) |[<img src="https://avatars.githubusercontent.com/hjKim1597" height=90> <br/> @hjKim1597](https://github.com/hjKim1597) |[<img src="https://avatars.githubusercontent.com/FORrri" height=90> <br/> @FORrri](https://github.com/FORrri) |[<img src="https://avatars.githubusercontent.com/huhuhahahaha" height=90> <br/> @huhuhahahaha](https://github.com/huhuhahahaha) |
 
 <br/>
 
