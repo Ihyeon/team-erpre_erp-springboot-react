@@ -41,7 +41,7 @@ const Message = () => (
 );
 
 
-function Messenger({isOpen, toggleMessenger}) {
+function Messenger({isOpen, toggleMessenger }) {
 
     const {
 
@@ -63,6 +63,7 @@ function Messenger({isOpen, toggleMessenger}) {
 
         // 🔴 채팅
         chatList,
+        setChatList,
         fetchChatList,
         selectedChat,
         isChatModalOpen,
