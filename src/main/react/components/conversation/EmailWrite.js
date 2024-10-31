@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { BrowserRouter } from "react-router-dom";
 import ReactDOM from 'react-dom/client';
 import '../../../resources/static/css/conversation/EmailWrite.css'
@@ -6,7 +6,7 @@ import Layout from "../../layout/Layout";
 import ReactQuill from "react-quill"; // 본문 글 편집기
 import 'react-quill/dist/quill.snow.css'; // 편집기 기본 스타일
 import axios from 'axios';
-import { update } from 'lodash';
+
 
 
 // 컴포넌트
@@ -26,7 +26,12 @@ function EmailWrite() {
   const [loading, setLoading] = useState(false);
   // reactQuill은 ref로 
   const quillRef = useRef(null);
-
+  // 파일첨부 누적용량
+  const [fileSumSize, setFileSumSize] = useState('');
+  // 파일첨부 MB 용량
+  const [mbSize, setMbSize] = useState('0');
+  // 파일 첨부 최대 용량(10MB)
+  const maxSize = 10 * 1024 * 1024
   // 에러 메시지 상태
   const [errors, setErrors] = useState({
     to: '',
@@ -78,46 +83,89 @@ function EmailWrite() {
   };
 
 
+  //첨부 버튼을 input으로 연결
+  const connectFileUpload = () => {
+    document.getElementById('file-upload').click();
+  };
+
+
   //파일 리스트 업데이트 함수 e 사용 / 파일 첨부 state 사용
-  const handleFileList = (e) => {
+  const handleFileAdd = (e) => {
     const newFiles = Array.from(e.target.files); // 새로 선택한 파일들
     const maxFiles = 5; // 최대 첨부파일 갯수
-    const maxSize = 10 * 1024 * 1024 // 10MB 제한
+    const maxSize = 10 * 1024 * 1024;// 10MB 제한
 
+    //파일 첨부 갯수 제한
     if (files.length + newFiles.length > maxFiles) {
       window.showToast("파일첨부는 최대 5개까지 가능합니다.", 'error', 3000);
       return;
     }
 
-    const oversizedFiles = newFiles.some((file) => file.size > maxSize); // newFiles(선택된 파일배열)에서 file의 사이즈가 위에 설정한 maxSize보다 클경우 저장
-    if (oversizedFiles) {
+     //파일 첨부 용량 제한
+    const totalSize = [...files, ...newFiles].reduce((sum, file) => sum + file.size, 0);  // sum은 누적값이고 0으로 초기화를 해주어 0부터 누적값이 더해지게 // reduce는 배열의 모든 요소를 하나로 합쳐줌
+    if (totalSize > maxSize) {
       window.showToast("첨부된 파일이 10MB 제한을 초과했습니다.", 'error', 3000);
       return;
     }
 
-
+    
     setFiles((prevFiles) => [...prevFiles, ...newFiles]); // files에 이전 선택 파일 + 새로 선택 파일 저장
+    setFileSumSize(totalSize);  // 총 용량 업데이트
+
+    //파일의 용량을 파일 박스에 출력하기 위함 남은 파일 용량에 따라 다르게 출력되게
+    setMbSize(
+      totalSize < 1024
+        ? totalSize.toFixed(2) + ' B'
+        : totalSize < 1024 * 1024
+          ? (totalSize / 1024).toFixed(2) + ' KB'
+          : (totalSize / 1024 / 1024).toFixed(2) + ' MB'
+    );
+
     setFileInfo((prevFilesInfo) => [
       ...prevFilesInfo,
-      ...newFiles.map((file) => ({ name: file.name, size: (file.size / 1024).toFixed(2) + 'KB' })) //파일 크기를 KB로 변환하고 소수점 두자리까지
+      ...newFiles.map((file) => ({ name: file.name, size: (file.size / 1024).toFixed(2) + ' KB' })) //파일 크기를 KB로 변환하고 소수점 두자리까지
     ]);
 
     e.target.value = null; //파일 중복 추가를 위한 input 값 초기화
   };
 
 
+  // 첨부된 용량 // 그냥 출력 시 두번 째 첨부 때부터 용량 출력 / 즉시출력 위함
+  useEffect(() => {
+    if (fileSumSize === 0) {
+      setMbSize('0');
+    } else if (fileSumSize < 1024 * 1024) {
+      setMbSize((fileSumSize / 1024).toFixed(2) + ' KB'); //용량이 1MB 미만일 경우 KB 단위로 표시
+    } else {
+      setMbSize((fileSumSize / 1024 / 1024).toFixed(2) + ' MB'); // 용량이 1MB 이상일 경우 MB 단위로 표시
+    }
+    console.log("첨부누적용량: " + mbSize);
+  }, [fileSumSize]); // fileSumSize 의 값이 변경 될 때마다
 
+  //첨부파일 삭제
+  const handleRemoveFile = (index) => {
+    setFiles((prevFiles) => {
+      const updatedFiles = prevFiles.filter((_, i) => i !== index);
+      const updatedSize = updatedFiles.reduce((sum, file) => sum + file.size, 0);  //삭제 후 파일 용량 다시 계산
 
-  //선택된 첨부파일 삭제
-  const removeFile = (index) => {
-    setFiles((prevFile) => prevFile.filter((_, i) => i !== index));
-    setFileInfo((prevFileInfo) => prevFileInfo.filter((_, i) => i !== index));
+      setFileSumSize(updatedSize);
+
+      //파일삭제에 따른 남은 용량 단위 표시
+      setMbSize(
+        updatedSize === 0
+          ? ''
+          : updatedSize < 1024
+            ? updatedSize.toFixed(2) + ' B'
+            : updatedSize < 1024 * 1024
+              ? (updatedSize / 1024).toFixed(2) + ' KB'
+              : (updatedSize / 1024 / 1024).toFixed(2) + ' MB'
+      );
+
+      setFileInfo((prevFileInfo) => prevFileInfo.filter((_, i) => i !== index));
+      return updatedFiles;
+    });
   };
 
-  //첨부 버튼을 input으로 연결
-  const connectFileUpload = () => {
-    document.getElementById('file-upload').click();
-  };
 
 
 
@@ -239,13 +287,13 @@ function EmailWrite() {
               accept='image/png, image/jpeg, application/pdf'
               className='file-upload-input'
               multiple //여러파일 선택
-              onChange={handleFileList}
+              onChange={handleFileAdd}
             />
             <p>
-              <span>
-                일반 0KB/10MB
+              <span className='file-total-size'>
+              첨부용량: {mbSize || "0 KB"}/10MB
               </span>
-              
+
             </p>
 
           </div>
@@ -266,7 +314,7 @@ function EmailWrite() {
                     {fileInfo.map((files, index) => (
                       <tr key={index} className='file-map'>
                         <td className='fileBox-delete-icon'>
-                          <span onClick={() => removeFile(index)}>
+                          <span onClick={() => handleRemoveFile(index)}>
                             <i className="bi bi-trash3 file-delete-icon"></i>
                           </span>
                         </td>

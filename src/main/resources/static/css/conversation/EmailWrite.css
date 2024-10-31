@@ -24,6 +24,8 @@
 
 .file-attachment:hover { background-color: #e9f5fb; } 
 
+.file-total-size { display: flex; justify-content: flex-end; position: fixed; right: 23px; top: 234px; font-size: 12px; color: #888787; } 
+
 .file-btn { border: 1px solid #a0a0a3; border-radius: 4px; text-align: center; width: 55px; height: 27px; font-size: 13px; color: #888787; margin-left: 14px !important; margin-top: 6px; } 
 
 .file-btn:hover { background-color: #e9f5fb; } 
