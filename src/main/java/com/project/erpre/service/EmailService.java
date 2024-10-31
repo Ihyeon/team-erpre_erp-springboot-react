@@ -34,7 +34,7 @@ public class EmailService {
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(text, true);
-            helper.setFrom("hojinkim001155@gmail.com"); // 내 smtp 계정이라 유효하지 않은 메일이어도 내 메일로 전송 (?)
+            helper.setFrom("erpre001@gmail.com"); // 내 smtp 계정이라 유효하지 않은 메일이어도 내 메일로 전송 (?)
 
             //첨부파일
             if (files != null && !files.isEmpty()) {
