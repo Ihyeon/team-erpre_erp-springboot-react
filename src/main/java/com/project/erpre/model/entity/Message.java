@@ -22,7 +22,7 @@ public class Message {
 
     @ManyToOne
     @JoinColumn(name = "message_sender_id", nullable = false)
-    private Employee employee;
+    private Employee employee; // 발신자
 
     @Column(nullable = false)
     private String messageContent;
@@ -33,12 +33,12 @@ public class Message {
     private LocalDateTime messageUpdateDate;
 
     @Column(nullable = false, length = 10)
-    private String messageDeleteYn = "n";
+    private String messageDeleteYn = "N";
 
     private LocalDateTime messageDeleteDate;
 
     @Column(nullable = false, length = 10)
-    private String messageRecallYn = "n";
+    private String messageRecallYn = "N";
 
     private LocalDateTime messageRecallDate;
 

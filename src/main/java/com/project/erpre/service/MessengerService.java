@@ -14,13 +14,18 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,6 +33,9 @@ public class MessengerService {
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    // SSE Emitter를 저장하는 컬렉션
+    private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
 
     private static final Logger logger = LoggerFactory.getLogger(MessengerService.class);
 
@@ -38,9 +46,10 @@ public class MessengerService {
     private final ChatMessageReadRepository chatMessageReadRepository;
     private final ChatFileRepository chatFileRepository;
     private final MessageRepository messageRepository;
+    private final MessageRecipientRepository messageRecipentRepository;
 
     @Autowired
-    public MessengerService(ChatRepository chatRepository, ChatParticipantRepository chatParticipantRepository, EmployeeRepository employeeRepository, ChatMessageRepository chatMessageRepository, ChatMessageReadRepository chatMessageReadRepository, ChatFileRepository chatFileRepository, MessageRepository messageRepository) {
+    public MessengerService(ChatRepository chatRepository, ChatParticipantRepository chatParticipantRepository, EmployeeRepository employeeRepository, ChatMessageRepository chatMessageRepository, ChatMessageReadRepository chatMessageReadRepository, ChatFileRepository chatFileRepository, MessageRepository messageRepository, MessageRecipientRepository messageRecipentRepository) {
         this.chatRepository = chatRepository;
         this.chatParticipantRepository = chatParticipantRepository;
         this.employeeRepository = employeeRepository;
@@ -48,8 +57,8 @@ public class MessengerService {
         this.chatMessageReadRepository = chatMessageReadRepository;
         this.chatFileRepository = chatFileRepository;
         this.messageRepository = messageRepository;
+        this.messageRecipentRepository = messageRecipentRepository;
     }
-
 
     /////////////////////////////////////////////////////////////////////// 🟢 공통
 
@@ -76,6 +85,96 @@ public class MessengerService {
     public List<MessageDTO> getMessageListByUser(String searchKeyword, String status) {
         String employeeId = getEmployeeIdFromAuthentication();
         return messageRepository.getMessageListByUser(employeeId, searchKeyword, status);
+    }
+
+    // 새 쪽지 생성
+    @Transactional
+    public MessageDTO createNote(String messageContent, LocalDateTime scheduledDate, List<String> receiverIds) {
+
+        // 현재 로그인된 발신자 아이디 조회
+        String employeeId = getEmployeeIdFromAuthentication();
+
+        // 발신자 조회
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("발신자를 찾을 수 없습니다: " + employeeId));
+
+        // 수신자 목록이 null 이거나 비어 있는지 확인
+        if (receiverIds == null || receiverIds.isEmpty()) {
+            throw new IllegalArgumentException("수신자 목록이 비어 있습니다. 적어도 한 명 이상의 수신자가 필요합니다.");
+        }
+
+        // 1. 메시지 생성 및 발신자 설정
+        Message message = new Message();
+        message.setEmployee(employee);
+        message.setMessageContent(messageContent);
+        message.setMessageSendDate(scheduledDate != null ? scheduledDate : LocalDateTime.now());
+
+        // 메시지 저장
+        messageRepository.save(message);
+
+        // 2. 수신자에 대한 처리 (내부용으로만 사용, 반환 데이터에 포함되지 않음)
+        for (String receiverId : receiverIds) {
+            Employee recipientEmployee = employeeRepository.findById(receiverId)
+                    .orElseThrow(() -> new RuntimeException("수신자를 찾을 수 없습니다: " + receiverId));
+
+            MessageRecipient messageRecipient = new MessageRecipient();
+            MessageRecipientId recipientId = new MessageRecipientId();
+            recipientId.setMessageNo(message.getMessageNo());
+            recipientId.setRecipientId(receiverId);
+
+            messageRecipient.setMessageRecipientId(recipientId);
+            messageRecipient.setMessage(message);
+            messageRecipient.setEmployee(recipientEmployee);
+
+            messageRecipentRepository.save(messageRecipient);
+        }
+
+        // 3. 발신자 ID 포함하여 MessageDTO 생성 후 반환 (수신자 정보는 포함하지 않음)
+        MessageDTO messageDTO = new MessageDTO(message);
+        messageDTO.setMessageSenderId(employeeId);
+        
+        // 4. 파일 및 사진 저장 로직
+
+        return messageDTO;
+    }
+
+
+
+    // 실시간 알림 전송
+    public void sendNote(List<String> receiverIds, String messageContent) {
+        for (String receiverId : receiverIds) {
+            SseEmitter emitter = emitters.get(receiverId);
+            if (emitter != null) {
+                try {
+                    emitter.send(SseEmitter.event().name("NEW_NOTE").data(messageContent));
+                } catch (Exception e) {
+                    emitters.remove(receiverId);
+                    logger.error("SSE 전송 중 오류 발생 (사용자 ID: {}): {}", receiverId, e.getMessage());
+                }
+            } else {
+                logger.info("구독 중이 아닌 사용자입니다: {}", receiverId);
+            }
+        }
+
+    }
+
+    // 실시간 알림 구독
+    public SseEmitter noteSubscribe() {
+        String senderId = getEmployeeIdFromAuthentication();
+        SseEmitter emitter = new SseEmitter();
+        emitters.put(senderId, emitter);
+        
+        // 연결 종료 및 타임아웃 처리
+        emitter.onCompletion(() -> emitters.remove(senderId));
+        emitter.onTimeout(() -> emitters.remove(senderId));
+
+        try {
+            emitter.send(SseEmitter.event().name("INIT"));
+        } catch (Exception e) {
+            emitters.remove(senderId);
+        }
+
+        return emitter;
     }
 
 

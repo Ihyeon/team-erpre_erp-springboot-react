@@ -246,7 +246,7 @@
     cursor: pointer;
 }
 
-/* 🟡 새 채팅 모달 */
+/* 🟡 직원 검색 모달 */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -257,7 +257,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 2000;
+}
+
+.modal_overlay {
+    z-index: 3000 !important;
 }
 
 .modal_container {

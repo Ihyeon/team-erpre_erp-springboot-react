@@ -72,9 +72,33 @@ public class MessengerController {
         }
     }
 
-    // 쪽지 전송(SSE를 이용한 실시간 알림 구독)
+    // 새 쪽지 생성 API (파일url, 유형
+    @PostMapping("/note/create")
+    public ResponseEntity<MessageDTO> createNote(
+            @RequestBody MessageDTO.NoteRequestDTO noteRequestDTO) {
+
+        MessageDTO createdNote = messengerService.createNote(
+                noteRequestDTO.getMessageContent(),
+                noteRequestDTO.getMessageSendDate(),
+                noteRequestDTO.getMessageReceiverIds()
+        );
+
+        return ResponseEntity.ok(createdNote);
+    }
+
+    // 실시간 알림 전송
+    @PostMapping("/note/send")
+    public ResponseEntity<?> sendNote(
+            @RequestParam List<String> receiverIds,
+            @RequestParam String messageContent
+    ) {
+        messengerService.sendNote(receiverIds, messageContent);
+        return ResponseEntity.ok("쪽지가 전송되었습니다");
+    }
+    
+    // 실시간 알림 구독
     @GetMapping(value = "/note/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter subscribe() {
+    public SseEmitter noteSubscribe() {
         SseEmitter emitter = new SseEmitter();
 
         try {

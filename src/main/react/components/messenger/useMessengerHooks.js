@@ -5,7 +5,7 @@ import {MdMeetingRoom, MdWork} from "react-icons/md";
 import {PiOfficeChairFill} from "react-icons/pi";
 import axios from "axios";
 import { useDebounce } from "../common/useDebounce";
-import useSearch from "./useSearch";
+import useSearch from "./UseSearch";
 
 export const useMessengerHooks = () => {
 

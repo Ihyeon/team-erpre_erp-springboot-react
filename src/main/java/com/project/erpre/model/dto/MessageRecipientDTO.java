@@ -6,9 +6,6 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-@Getter
-@Setter
-@ToString
 @AllArgsConstructor
 @NoArgsConstructor
 public class MessageRecipientDTO {
