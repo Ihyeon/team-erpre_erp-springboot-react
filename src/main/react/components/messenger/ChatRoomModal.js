@@ -43,7 +43,7 @@ const ChatRoomModal = ({ chatList, setChatList, chatNo, closeChatModal, formatDa
 
     const handleSendMessage = () => {
 
-        console.log("handleSendMessage함수 호출");
+        console.log("handleSendMessage 함수 호출");
         
         if (message.trim() && stompClientRef.current && stompClientRef.current.connected) {
             const newMessage = {

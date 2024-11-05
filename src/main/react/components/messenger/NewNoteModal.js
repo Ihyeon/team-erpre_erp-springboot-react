@@ -1,30 +1,98 @@
-import React, { useState } from "react";
+import React, {useMemo, useState} from "react";
 import Draggable from "react-draggable";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { FaRegPlusSquare } from "react-icons/fa";
-import useEmployeeSearchModal from "./useEmployeeSearchModal";
+import {FaRegPlusSquare} from "react-icons/fa";
+import UseEmployeeSearchModal from "./UseEmployeeSearchModal";
+import UseSearch from "./UseSearch";
+import { CustomToolbar } from "./CustomToolbar";
+import axios from "axios";
 
-const NewNoteModal = ({ closeNewNoteModal }) => {
+const NewNoteModal = ({closeNewNoteModal}) => {
 
-    const [recipients, setRecipients] = useState("");
-    const [messageContent, setMessageContent] = useState("");
-    const [sendToMe, setSendToMe] = useState(false);
-    const [scheduledSend, setScheduledSend] = useState(false);
-    const [scheduledDate, setScheduledDate] = useState("");
-    const [isEmployeeSearchModalOpen, setEmployeeSearchModalOpen] = useState(false);
+    const [recipients, setRecipients] = useState([]); // 선택된 직원 목록
+    const [messageContent, setMessageContent] = useState(""); // 발신 메세지
+    const [sendToMe, setSendToMe] = useState(false); // 나에게 보내기
+    const [scheduledSend, setScheduledSend] = useState(false); // 예약 보내기
+    const [scheduledDate, setScheduledDate] = useState(""); // 예약 날짜 선택
+    const [employeeSearchText, setEmployeeSearchText] = useState(""); // 직원 검색 텍스트
+    const [isEmployeeSearchModalOpen, setEmployeeSearchModalOpen] = useState(false); // 직원 검색 모달창
+
+    const {data: suggestions, searchLoading} = UseSearch("/api/messengers/employeeList", employeeSearchText);
 
     const openEmployeeSearchModal = () => setEmployeeSearchModalOpen(true);
     const closeEmployeeSearchModal = () => setEmployeeSearchModalOpen(false);
 
-    const quillModules = {
-        toolbar: [
-            ['link', 'image'],
-            [{ 'header': [1, 2, false] }],
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-            ['clean']
-        ],
+    const onSelectedEmployees = (selectedEmployees) => {
+        // 중복 제거 로직 개선 및 데이터 형식 확인
+        const newRecipients = selectedEmployees.filter(
+            (newEmployee) => !recipients.some((r) => r.employeeId === newEmployee.employeeId)
+        ).map((employee) => ({ ...employee }));
+
+        setRecipients([...recipients, ...newRecipients]);
+
+        closeEmployeeSearchModal();
+    };
+
+    // 파일 업로드 핸들러
+    const handleFileUpload = () => {
+        const input = document.createElement("input");
+        input.setAttribute("type", "file");
+        input.setAttribute("accept", "*"); // 모든 파일 유형 허용
+        input.click();
+
+        input.onchange = async () => {
+            const file = input.files[0];
+            if (file) {
+                // 파일 업로드 로직 추가 (서버에 업로드하거나 로컬에서 처리)
+                console.log("선택된 파일:", file);
+                // // 예시로 파일 이름을 에디터에 삽입
+                // const quill = quillRef.current.getEditor();
+                // quill.insertText(quill.getSelection().index, `[파일: ${file.name}]`);
+            }
+        };
+    };
+
+    const quillModules = useMemo(() => {
+        return {
+            toolbar: {
+                container: "#toolbar",
+                handlers: {
+                    upload: handleFileUpload,  // 파일 업로드 핸들러
+                }
+            },
+        }
+    },[]);
+
+    const handleSendNote = async () => {
+        try {
+            const receiverIds = recipients.map(r => r.employeeId);
+            if (receiverIds.length === 0) {
+                console.error('받는 사람이 선택되지 않았습니다.');
+                return;
+            }
+
+            console.log("최종 수신자", recipients);
+
+            // 1. 노트 생성 API 호출
+            const response = await axios.post('/api/messengers/note/create', {
+                receiverIds: recipients.map(r => r.employeeId),
+                messageContent: messageContent,
+                scheduledDate: scheduledSend ? scheduledDate : null,
+            });
+            const newNote = response.data;
+            console.log('전송된 쪽지:', newNote);
+
+            // 2. 실시간 전송 API 호출
+            await axios.post('/api/messengers/note/send', {
+                receiverIds: recipients.map(r => r.employeeId),
+                messageContent: messageContent,
+            });
+            closeNewNoteModal();
+
+        } catch (error) {
+            console.error('쪽지 전송 오류:', error);
+        }
     };
 
     return (
@@ -33,7 +101,6 @@ const NewNoteModal = ({ closeNewNoteModal }) => {
                 <div className="new-note-modal">
                     <div className="note-modal-header">
                         <h2>쪽지 보내기</h2>
-                        <button onClick={closeNewNoteModal} className="close-button">닫기</button>
                     </div>
                     <div className="note-modal-body">
                         <div className="recipient-section">
@@ -42,15 +109,40 @@ const NewNoteModal = ({ closeNewNoteModal }) => {
                                 className="note-employee-search"
                                 onClick={openEmployeeSearchModal}
                             >
-                                <FaRegPlusSquare />
+                                <FaRegPlusSquare/>
                             </button>
-                            <input
-                                type="text"
-                                placeholder="받는 사람의 이름을 입력하거나, + 버튼을 눌러 검색하세요"
-                                value={recipients}
-                                onChange={(e) => setRecipients(e.target.value)}
-                            />
+                            <div className="recipient-input-container">
+                                <div className="selected-recipients">
+                                    {recipients.map((employee) => (
+                                        <span key={employee.employeeId} className="recipient-tag">
+                                                {employee.employeeName}
+                                            <button onClick={() => handleRemoveRecipient(employee.employeeId)}>
+                                                     &times;
+                                             </button>
+                                        </span>
+                                    ))}
+                                    <input
+                                        type="text"
+                                        placeholder={recipients.length === 0 ? "받는 사람의 이름을 입력하거나, + 버튼을 눌러 검색하세요" : ''}
+                                        value={employeeSearchText}
+                                        onChange={(e) => setEmployeeSearchText(e.target.value)}
+                                        className="recipient-input"
+                                    />
+                                </div>
+                            </div>
                         </div>
+                        {/*/!* 자동완성 *!/*/}
+                        {/*suggestions.length > 0 && (*/}
+                        {/*    <ul className="autocomplete-suggestions">*/}
+                        {/*        {suggestions.map((employee) => (*/}
+                        {/*            <li*/}
+                        {/*                key={employee.employeeId}*/}
+                        {/*                onClick={() => handleSelectEmployees(employee)}*/}
+                        {/*            >*/}
+                        {/*                {employee.employeeName} ({employee.jobName}, {employee.departmentName})*/}
+                        {/*            </li>*/}
+                        {/*        ))}*/}
+                        {/*    </ul>*/}
                         <div className="options">
                             <label>
                                 <input
@@ -76,6 +168,9 @@ const NewNoteModal = ({ closeNewNoteModal }) => {
                                 />
                             )}
                         </div>
+                        {/* Custom Toolbar */}
+                        <CustomToolbar />
+                        {/* Quill 에디터 */}
                         <ReactQuill
                             theme="snow"
                             value={messageContent}
@@ -84,8 +179,9 @@ const NewNoteModal = ({ closeNewNoteModal }) => {
                             placeholder="메시지를 입력하세요"
                             className="message-textarea"
                         />
+                        { /* 이미지 및 파일 */}
                         <div className="note-footer">
-                            <button className="send-button">보내기</button>
+                            <button className="send-button" onClick={handleSendNote}>보내기</button>
                             <button onClick={closeNewNoteModal} className="cancel-button">닫기</button>
                         </div>
                     </div>
@@ -94,11 +190,13 @@ const NewNoteModal = ({ closeNewNoteModal }) => {
 
             {/* 직원 검색 모달 */}
             {isEmployeeSearchModalOpen && (
-                <useEmployeeSearchModal
+                <UseEmployeeSearchModal
                     closeEmployeeSearchModal={closeEmployeeSearchModal}
-                    createUrl="/api/messengers/note/create"
+                    onSelectedEmployees={onSelectedEmployees}
+                    createUrl=""
                 />
             )}
+
         </>
     );
 };

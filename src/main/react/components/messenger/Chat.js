@@ -1,12 +1,12 @@
 import React, {useState} from 'react';
 import { FaUserCircle } from 'react-icons/fa';
 import ChatRoomModal from './ChatRoomModal'
-import UseEmployeeSearchModal from "./useEmployeeSearchModal";
+import UseEmployeeSearchModal from "./UseEmployeeSearchModal";
 import {LuMessageSquarePlus} from "react-icons/lu";
 import {useChatHooks} from "./useChatHooks";
 
 
-const Chat = ({ chatList, setChatList, formatDate, isEmployeeSearchOpen, selectedChat, openChatModal, closeChatModal, fetchChatList }) => {
+const Chat = ({ chatList, setChatList, formatDate, selectedChat, isChatModalOpen, openChatModal, closeChatModal, fetchChatList }) => {
 
     const {
 
@@ -90,8 +90,8 @@ const Chat = ({ chatList, setChatList, formatDate, isEmployeeSearchOpen, selecte
         )}
 
         {/* 새 채팅 추가 모달 */}
-        {isEmployeeSearchOpen && (
-            <div className="new-chat-modal" onClick={(e) => e.target === e.currentTarget && closeNewChatModal()}>
+        {isEmployeeSearchModalOpen && (
+            <div className="new-chat-modal" onClick={(e) => e.target === e.currentTarget && closeEmployeeSearchModal()}>
                 <div className="new-chat-modal-content">
                     <UseEmployeeSearchModal
                         closeEmployeeSearchModal={closeEmployeeSearchModal}

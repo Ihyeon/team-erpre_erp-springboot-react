@@ -1,8 +1,10 @@
 package com.project.erpre.model.dto;
 
+import com.project.erpre.model.entity.Message;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Builder
 @Data
@@ -26,6 +28,7 @@ public class MessageDTO {
     private String bookmarkedYn;
     private LocalDateTime messageRecallDate;
     private Integer messageAttachmentId;
+    private List<String> messageReceiverIds;
 
     // 상태에 따른 쪽지 목록 조회 및 검색 생성자
     public MessageDTO(Long messageNo, String messageSenderId, String employeeName, String messageContent,
@@ -46,6 +49,22 @@ public class MessageDTO {
         this.bookmarkedYn = bookmarkedYn;
         this.messageAttachmentId = messageAttachmentId;
     }
-    
 
+    // 새 쪽지 생성 생성자
+    public MessageDTO(Message message) {
+        this.messageNo = message.getMessageNo();
+        this.messageSenderId = message.getEmployee().getEmployeeId();
+        this.messageContent = message.getMessageContent();
+        this.messageSendDate = message.getMessageSendDate();
+        this.messageDeleteYn = message.getMessageDeleteYn();
+        this.messageRecallYn = message.getMessageRecallYn();
+    }
+
+    // 새 쪽지 저장 DTO
+    @Data
+    public static class NoteRequestDTO {
+        private String messageContent;
+        private LocalDateTime messageSendDate;
+        private List<String> messageReceiverIds;
+    }
 }

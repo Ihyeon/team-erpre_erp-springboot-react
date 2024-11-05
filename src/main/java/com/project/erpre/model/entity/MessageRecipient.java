@@ -11,9 +11,7 @@ import java.util.List;
 @Table(name = "m_message_recipient")
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
-@ToString
+@Data
 public class MessageRecipient {
 
     @EmbeddedId
