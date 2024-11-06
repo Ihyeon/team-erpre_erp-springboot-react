@@ -30,6 +30,14 @@ function EmailSidebar({ currentMenu }) {
                     const data = response.data;
                     console.log('직원 데이터:', data);
                     setEmployee(data);
+
+                    if (data.employeeEmail && data.employeeId) {
+                        setEmployee(data);
+                        localStorage.setItem("employeeEmail", data.employeeEmail);   //이메일 계정 접근 위해 로컬스토리지에 이메일을 저장
+                        localStorage.setItem("employeeId", data.employeeId); //로그인한 계정 저장
+                    } else {
+                        console.error("데이터 형식 오류: employeeEmail 속성을 찾을 수 없습니다.");
+                    }
                 } else {
                     console.error('사용자 정보를 가져오는데 실패했습니다.');
                 }
@@ -78,7 +86,7 @@ function EmailSidebar({ currentMenu }) {
                     <div className="user-name">
                         {employee ? (
                             <>
-                                 {employee.jobName === 'Admin' ? '관리자' : ''} {employee.employeeName} ({employee.departmentName})
+                                {employee.jobName === 'Admin' ? '관리자' : ''} {employee.employeeName} ({employee.departmentName})
                             </>
                         ) : (
                             'LOADING'

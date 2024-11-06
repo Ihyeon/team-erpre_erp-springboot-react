@@ -6,6 +6,7 @@ import Layout from "../../layout/Layout";
 import ReactQuill from "react-quill"; // 본문 글 편집기
 import 'react-quill/dist/quill.snow.css'; // 편집기 기본 스타일
 import axios from 'axios';
+import { data } from '@remix-run/router';
 
 
 
@@ -71,6 +72,19 @@ function EmailWrite() {
     }
   };
 
+  //SideBar.js에서 로컬스토리지에 저장한 직원 이메일 사용
+  const [from, setFrom] = useState(localStorage.getItem("employeeEmail") || "");
+  //로그인된 계정
+  const [emailIdS, setEmailIdS] = useState(localStorage.getItem("employeeId") || "");
+
+
+  useEffect(() => {
+    console.log("로그인계정 이메일: ", from);
+    console.log("로그인계정 아이디: ", emailIdS);
+
+  }, [from, emailIdS]);
+
+
   // 제목 인풋 공백 시
   const handleSubjectChange = (e) => {
     setSubject(e.target.value);
@@ -81,7 +95,6 @@ function EmailWrite() {
       }));
     }
   };
-
 
   //첨부 버튼을 input으로 연결
   const connectFileUpload = () => {
@@ -101,33 +114,35 @@ function EmailWrite() {
       return;
     }
 
-     //파일 첨부 용량 제한
+    //파일 첨부 용량 제한
     const totalSize = [...files, ...newFiles].reduce((sum, file) => sum + file.size, 0);  // sum은 누적값이고 0으로 초기화를 해주어 0부터 누적값이 더해지게 // reduce는 배열의 모든 요소를 하나로 합쳐줌
     if (totalSize > maxSize) {
       window.showToast("첨부된 파일이 10MB 제한을 초과했습니다.", 'error', 3000);
       return;
     }
 
-    
+
     setFiles((prevFiles) => [...prevFiles, ...newFiles]); // files에 이전 선택 파일 + 새로 선택 파일 저장
     setFileSumSize(totalSize);  // 총 용량 업데이트
 
     //파일의 용량을 파일 박스에 출력하기 위함 남은 파일 용량에 따라 다르게 출력되게
     setMbSize(
       totalSize < 1024
-        ? totalSize.toFixed(2) + ' B'
+        ? totalSize.toFixed(3) + ' B'
         : totalSize < 1024 * 1024
-          ? (totalSize / 1024).toFixed(2) + ' KB'
-          : (totalSize / 1024 / 1024).toFixed(2) + ' MB'
+          ? (totalSize / 1024).toFixed(3) + ' KB'
+          : (totalSize / 1024 / 1024).toFixed(3) + ' MB'
     );
 
     setFileInfo((prevFilesInfo) => [
       ...prevFilesInfo,
-      ...newFiles.map((file) => ({ name: file.name, size: (file.size / 1024).toFixed(2) + ' KB' })) //파일 크기를 KB로 변환하고 소수점 두자리까지
+      ...newFiles.map((file) => ({ name: file.name, size: (file.size / 1024).toFixed(3) + ' KB' })) //파일 크기를 KB로 변환하고 소수점 두자리까지
     ]);
 
     e.target.value = null; //파일 중복 추가를 위한 input 값 초기화
   };
+
+
 
 
   // 첨부된 용량 // 그냥 출력 시 두번 째 첨부 때부터 용량 출력 / 즉시출력 위함
@@ -135,9 +150,9 @@ function EmailWrite() {
     if (fileSumSize === 0) {
       setMbSize('0');
     } else if (fileSumSize < 1024 * 1024) {
-      setMbSize((fileSumSize / 1024).toFixed(2) + ' KB'); //용량이 1MB 미만일 경우 KB 단위로 표시
+      setMbSize((fileSumSize / 1024).toFixed(3) + ' KB'); //용량이 1MB 미만일 경우 KB 단위로 표시
     } else {
-      setMbSize((fileSumSize / 1024 / 1024).toFixed(2) + ' MB'); // 용량이 1MB 이상일 경우 MB 단위로 표시
+      setMbSize((fileSumSize / 1024 / 1024).toFixed(3) + ' MB'); // 용량이 1MB 이상일 경우 MB 단위로 표시
     }
     console.log("첨부누적용량: " + mbSize);
   }, [fileSumSize]); // fileSumSize 의 값이 변경 될 때마다
@@ -155,17 +170,16 @@ function EmailWrite() {
         updatedSize === 0
           ? ''
           : updatedSize < 1024
-            ? updatedSize.toFixed(2) + ' B'
+            ? updatedSize.toFixed(3) + ' B'
             : updatedSize < 1024 * 1024
-              ? (updatedSize / 1024).toFixed(2) + ' KB'
-              : (updatedSize / 1024 / 1024).toFixed(2) + ' MB'
+              ? (updatedSize / 1024).toFixed(3) + ' KB'
+              : (updatedSize / 1024 / 1024).toFixed(3) + ' MB'
       );
 
       setFileInfo((prevFileInfo) => prevFileInfo.filter((_, i) => i !== index));
       return updatedFiles;
     });
   };
-
 
 
 
@@ -185,6 +199,8 @@ function EmailWrite() {
     formData.append('to', to); // append : 폼데이터에 ('to'라는 키 추가, to라는 현재의 상태값)
     formData.append('subject', subject);
     formData.append('text', text);
+    formData.append('from', from);
+    formData.append('emailIds', emailIdS)
 
     //파일 첨부 처리 반복문으로 폼데이타에 저장 / 첨부파일은 여러개
     for (let i = 0; i < files.length; i++) {
@@ -204,21 +220,35 @@ function EmailWrite() {
           'Content-Type': 'multipart/form-data' // multipart 여러 텍스트, 파일 전송 가능한 타입
         }
       });
-      window.showToast("메일 전송이 완료되었습니다.")
+      window.showToast("메일 전송이 완료되었습니다.");
+
       setTo('');
       setSubject('');
       setText('');
       setFiles([]);
       setFileInfo([]);
+
     } catch (error) {
-      console.log("메일 전송에 실패했습니다.", error);
-      window.showToast("메일 전송에 실패했습니다", 'error', 3000);
+      console.log("메일 전송 실패", error);
+
+      if (error.response && error.response.status === 500) {
+
+        const errorMsg = error.response.data;
+
+        if (errorMsg && errorMsg.includes('Invalid Addresses')) { //에러메시지에 Invalid Addresses가 포함되어있으면 출력
+          window.showToast('이메일 형식이 잘못되었습니다.', 'error', 3000);
+          console.log(error.response.data);
+
+        } else {
+          window.showToast('서버 오류로 이메일 전송에 실패했습니다.', 'error', 3000);
+        }
+      } else {
+        window.showToast("메일 전송에 실패했습니다.", 'error', 3000);
+      }
     } finally {
       setLoading(false);   // 이메일 전송 후 로딩 상태값 변경
     }
-
-
-  }
+  };
 
   return (
     <Layout currentMenu="emailWrite">
@@ -291,7 +321,7 @@ function EmailWrite() {
             />
             <p>
               <span className='file-total-size'>
-              첨부용량: {mbSize || "0 KB"}/10MB
+                첨부용량: {mbSize || "0 KB"}/10MB
               </span>
 
             </p>
