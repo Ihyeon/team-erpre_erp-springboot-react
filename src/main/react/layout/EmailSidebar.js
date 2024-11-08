@@ -31,10 +31,11 @@ function EmailSidebar({ currentMenu }) {
                     console.log('직원 데이터:', data);
                     setEmployee(data);
 
-                    if (data.employeeEmail && data.employeeId) {
+                    if (data.employeeEmail && data.employeeId && data.employeeName) {
                         setEmployee(data);
                         localStorage.setItem("employeeEmail", data.employeeEmail);   //이메일 계정 접근 위해 로컬스토리지에 이메일을 저장
                         localStorage.setItem("employeeId", data.employeeId); //로그인한 계정 저장
+                        localStorage.setItem("employeeName", data.employeeName) // 이메일 이름
                     } else {
                         console.error("데이터 형식 오류: employeeEmail 속성을 찾을 수 없습니다.");
                     }
@@ -128,9 +129,9 @@ function EmailSidebar({ currentMenu }) {
                         <i className="bi bi-inboxes-fill icon-margin"></i>메일 관리
                     </span>
                     <ul className="submenu">
-                        <li className={currentMenu === 'draftMailBox' ? 'active' : ''}>
+                        {/* <li className={currentMenu === 'draftMailBox' ? 'active' : ''}>
                             <a href="#" onClick={() => handleSubMenuClick('draftMailBox', '/draftMailBox')}>임시 보관함</a>
-                        </li>
+                        </li> */}
                         <li className={currentMenu === 'trashMailBox' ? 'active' : ''}>
                             <a href="#" onClick={() => handleSubMenuClick('trashMailBox', '/trashMailBox')}>휴지통</a>
                         </li>

@@ -231,19 +231,22 @@ function EmailWrite() {
     } catch (error) {
       console.log("메일 전송 실패", error);
 
-      if (error.response && error.response.status === 500) {
-
+      if (error.response) {
         const errorMsg = error.response.data;
 
-        if (errorMsg && errorMsg.includes('Invalid Addresses')) { //에러메시지에 Invalid Addresses가 포함되어있으면 출력
+        if (error.response.status === 400 && errorMsg.includes("Invalid Addresses")) {
+          // 이메일 주소 형식 오류
           window.showToast('이메일 형식이 잘못되었습니다.', 'error', 3000);
-          console.log(error.response.data);
-
+        } else if (error.response.status === 500) {
+          // 서버 오류 (이메일 주소)
+          window.showToast('이메일 형식이 잘못되었습니다.', 'error', 3000);
         } else {
-          window.showToast('서버 오류로 이메일 전송에 실패했습니다.', 'error', 3000);
+          // 기타 오류
+          window.showToast("메일 전송에 실패했습니다.", 'error', 3000);
         }
       } else {
-        window.showToast("메일 전송에 실패했습니다.", 'error', 3000);
+        // 네트워크 오류 또는 기타 예외
+        window.showToast("네트워크 오류가 발생했습니다.", 'error', 3000);
       }
     } finally {
       setLoading(false);   // 이메일 전송 후 로딩 상태값 변경
@@ -260,7 +263,7 @@ function EmailWrite() {
           {/* 받는 사람*/}
           <div className="email-field">
             <label htmlFor="to">받는사람</label>
-            <button><i className="bi bi-person-plus"></i></button>
+            {/*<button><i className="bi bi-person-plus"></i></button>*/}
             <input
               type="text"
               id="to"
@@ -386,7 +389,7 @@ function EmailWrite() {
                 <i className="bi bi-send icon-margin"></i>
                 {loading ? '메일 전송중 ..' : '보내기'}
               </button>
-              <a href="#">임시저장</a>
+              {/* <a href="#">임시저장</a> */}
             </div>
           </div>
 

@@ -24,7 +24,7 @@ function Header() {
         <header>
             <div className="header-container">
                 <div className="logo">
-                    <a href="/"><img src="/img/logo2.png" alt="IKEA Logo"/><span>Erpenterprise Resource  Planning</span></a>
+                    <a href="/main"><img src="/img/logo2.png" alt="IKEA Logo"/><span>Erpenterprise Resource  Planning</span></a>
                 </div>
                 <div className="header-icons">
                     <FaEnvelope className="header-icon mail" title="메일" onClick={handleEmailClick}/>

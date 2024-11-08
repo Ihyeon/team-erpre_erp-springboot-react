@@ -23,7 +23,7 @@ public class EmailSend {
 
     // 직원 테이블 외래키 참조
     @Column(name = "email_id_s", nullable = false)
-    private String emailIdS;  // 발신 직원 ID
+    private String employeeId;  // 발신 직원 ID
 
     @Column(name = "email_addr_receive_s", nullable = false)
     private String emailAddrReceiveS;  // 수신 직원 이메일

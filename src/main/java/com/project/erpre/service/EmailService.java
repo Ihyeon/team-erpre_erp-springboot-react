@@ -7,6 +7,7 @@ import javax.mail.internet.MimeMessage;
 import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import com.project.erpre.model.entity.EmailSend;
 import com.project.erpre.model.entity.Employee;
 import com.project.erpre.repository.EmailRepository;
 import com.project.erpre.repository.EmployeeRepository;
+import com.sun.mail.smtp.SMTPAddressFailedException;
 
 @Service
 public class EmailService {
@@ -30,6 +32,14 @@ public class EmailService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
+    // 이메일 주소 형식에 맞지 않을때를 위한 에러 메시지 커스텀 예외를 생성함
+    public class InvalidEmailAddressException extends RuntimeException {
+        public InvalidEmailAddressException(String message) {
+            super(message);
+        }
+    }
+
+    // 이메일 전송
     @Transactional
     public EmailSend sendEmail(String to, String subject, String text, String from, String emailIds,
             List<MultipartFile> files) {
@@ -60,19 +70,31 @@ public class EmailService {
 
             // EmailSend 엔티티 생성 + 저장
             EmailSend emailSend = new EmailSend();
-            emailSend.setEmailIdS(emailIds); // 직원아이디도 동적으로 받아 로그인한 계정에 따라 변경
+            emailSend.setEmployeeId(emailIds); // 직원아이디도 동적으로 받아 로그인한 계정에 따라 변경
             emailSend.setEmailAddrReceiveS(to);
             emailSend.setEmailSubjectS(subject);
             emailSend.setEmailTextS(text);
             emailSend.setEmailStatusS("nr");
             emailSend.setEmailDateS(new Timestamp(System.currentTimeMillis()));
 
-            EmailSend savedEmailSend = emailRepository.save(emailSend);
+            EmailSend savedEmailSend = emailRepository.save(emailSend); // JPA save를 통해 DB에 전송내역 저장
             return savedEmailSend;
-
+        } catch (SMTPAddressFailedException e) {
+            throw new InvalidEmailAddressException("이메일 주소 형식이 잘못되었습니다: " + e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("이메일 전송 중 오류가 발생했습니다.");
+            throw new RuntimeException("이메일 전송 중 오류가 발생했습니다.", e);
         }
     }
+
+    // 보낸메일 내역 조회
+    public List<EmailSend> getEmailSendByEmployeeId(String employeeId) {
+        return emailRepository.findByEmployeeId(employeeId);
+    }
+
+    // 이메일 뷰어
+    public EmailSend findEmailById(Integer emailNmS) {
+        return emailRepository.findById(emailNmS).orElse(null); 
+    }
+
 }

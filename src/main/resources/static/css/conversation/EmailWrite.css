@@ -9,7 +9,7 @@
 
 .email-field label { width: 100px; } 
 
-.email-field input { width: 100%; padding: 8px; border: none; border-bottom: 1px solid #ddd; font-size: 12px; margin-left: 6px; } 
+.email-field input { width: 100%; padding: 8px; border: none; border-bottom: 1px solid #ddd; font-size: 12px; margin-left: 21px; } 
 
 .email-field input:focus { border-color: #007CC1; outline: none; } 
 
