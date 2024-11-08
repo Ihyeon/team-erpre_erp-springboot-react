@@ -54,7 +54,9 @@ dependencies {
 	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5' // 타임리프에서 사용
 	testImplementation 'org.springframework.security:spring-security-test' // 테스트
 	implementation 'org.springframework.boot:spring-boot-starter-websocket' // 웹소켓 의존성 추가
-	implementation 'org.springframework.boot:spring-boot-starter-mail' // Spring Email 의존성
+	implementation 'org.springframework.boot:spring-boot-starter-mail' // Spring Email 의존성 (발신용 SMTP)
+	implementation 'com.sun.mail:javax.mail:1.6.2' // JavaMail API 추가 의존성 (수신용 IMAP)
+
 
 	implementation 'com.itextpdf:itextpdf:5.5.13.3' //pdf 다운로드
 	//Microsoft Office 문서 다운로드
