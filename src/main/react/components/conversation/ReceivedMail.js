@@ -94,7 +94,7 @@ function ReceivedMail() {
                     </td>
                   </tr> */}
 
-                <a href='/emailViewer'>
+                <a href='#'>
                   <tr>
                     <td><input type="checkbox" /></td>
                     <td>이름 / 이메일</td>
@@ -104,7 +104,7 @@ function ReceivedMail() {
                   </tr>
                 </a>
 
-                <a href='/emailViewer'>
+                <a href='#'>
                   <tr>
                     <td><input type="checkbox" /></td>
                     <td>이름 / 이메일</td>
