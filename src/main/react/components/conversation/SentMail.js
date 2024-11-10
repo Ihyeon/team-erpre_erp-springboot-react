@@ -131,7 +131,7 @@ function SentMail() {
                 ) : (
                   sendData.length > 0 ? (
                     sendData.map((email, index) => (
-                      <tr key={index} onClick={() => openModal(email)}>
+                      <tr key={index} onClick={() => openModal(email)} className='send_tr'>
                         <td><input type="checkbox" /></td>
                         <td>{email.emailAddrReceiveS}</td>
                         <td>{email.emailSubjectS}</td>
