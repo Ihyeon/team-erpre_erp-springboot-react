@@ -63,6 +63,7 @@
     "sockjs-client": "^1.6.1",
     "sweetalert2": "^11.14.4",
     "sweetalert2-react-content": "^5.0.7",
+    "swr": "^2.2.5",
     "url": "^0.11.4"
   },
   "devDependencies": {

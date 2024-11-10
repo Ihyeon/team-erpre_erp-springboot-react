@@ -18,5 +18,4 @@ public interface DispatchRepository extends JpaRepository<Dispatch, Integer> {
             "WHERE d.warehouse.warehouseNo = :warehouseNo " +
             "AND d.dispatchStatus = 'inProgress'")
     List<Dispatch> findInProgressDispatchesByWarehouseNo(@Param("warehouseNo") Integer warehouseNo);
-    //
 }

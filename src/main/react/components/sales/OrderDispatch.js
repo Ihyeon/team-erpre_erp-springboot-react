@@ -6,6 +6,7 @@ import { BrowserRouter } from "react-router-dom";
 import '../../../resources/static/css/sales/OrderDispatch.css';
 import axios from 'axios';
 import { QRCodeCanvas } from 'qrcode.react'; // QR 코드 라이브러리 임포트
+import useSWR from 'swr'; //사용자가 탭을 변경하거나 페이지에 다시 돌아올 때 자동으로 최신 데이터가 로드
 
 // 날짜 포맷팅 함수
 const formatDateTime = (dateString) => {
@@ -595,9 +596,6 @@ function ConfirmationModal({ message, onConfirm, onCancel }) {
 //주문 출고
 function OrderDispatch() { //주문번호1-상품번호1-상품 한 행1-출고1
 
-    // 로딩 상태
-    const [loading, setLoading] = useState(false);
-
     // 출고 데이터
     const [dispatches, setDispatches] = useState([]);
 
@@ -639,38 +637,51 @@ function OrderDispatch() { //주문번호1-상품번호1-상품 한 행1-출고1
     const [selectedDispatchData, setSelectedDispatchData] = useState(null);
 
 
-    // 출고 데이터 가져오기
-    useEffect(() => {
-        fetchData();
-    }, [filterType, page]);
+    // SWR의 fetcher 함수
+    const fetcher = url => axios.get(url).then(res => res.data);
 
-    const fetchData = () => {
-        setLoading(true);
-        let url = '';
-        if (filterType === 'pending') {
+    // SWR 사용하여 데이터 fetching
+      const { data, error, isValidating, mutate } = useSWR(
+        () => {
+          let url = '';
+          if (filterType === 'pending') {
             url = `/api/orderDispatch/pending?page=${page}&size=${itemsPerPage}`;
-        } else if (filterType === 'inProgress') {
+          } else if (filterType === 'inProgress') {
             url = `/api/orderDispatch/inProgress?page=${page}&size=${itemsPerPage}`;
-        } else if (filterType === 'complete') {
+          } else if (filterType === 'complete') {
             url = `/api/orderDispatch/complete?page=${page}&size=${itemsPerPage}`;
+          }
+          return url;
+        },
+        fetcher,
+        {
+          revalidateOnFocus: true,
+          revalidateOnReconnect: true,
         }
-        axios.get(url)
-            .then(response => {
-                console.log('Fetched dispatch data:', response.data);
-                // deleteYN이 'N'인 항목만 화면에 반영
-                const filteredData = response.data.content.filter(dispatch => dispatch.dispatchDeleteYn === 'N');
-                setDispatches(filteredData);
-                setTotalPages(response.data.totalPages);
-                setSelectedDispatches(new Array(filteredData.length).fill(false));
-                setSelectAll(false);
-                setLoading(false);
-            })
-            .catch(error => {
-                console.error("Error fetching dispatch data:", error);
-                setLoading(false);
-            });
-    };
-    
+      );
+
+   // 데이터 로딩 상태 설정
+    const loading = !data && !error;
+
+      // 데이터 설정
+      useEffect(() => {
+        if (data) {
+          // deleteYN이 'N'인 항목만 화면에 반영
+          const filteredData = data.content.filter(dispatch => dispatch.dispatchDeleteYn === 'N');
+          setDispatches(filteredData);
+          setTotalPages(data.totalPages);
+          setSelectedDispatches(new Array(filteredData.length).fill(false));
+          setSelectAll(false);
+        }
+      }, [data]);
+
+    // 에러 처리
+    useEffect(() => {
+      if (error) {
+        console.error("Error fetching dispatch data:", error);
+      }
+    }, [error]);
+
 
     // 필터링된 dispatches 생성
     const filteredDispatches = useMemo(() => {
@@ -796,77 +807,45 @@ function OrderDispatch() { //주문번호1-상품번호1-상품 한 행1-출고1
         .then(response => {
             window.showToast("창고 배정이 완료되었습니다.");
 
-            // 프론트엔드 상태 업데이트
-            const updatedDispatches = dispatches.map((dispatch) => {
-                if (selectedDispatchNos.includes(dispatch.dispatchNo)) {
-                    return {
-                        ...dispatch,
-                        warehouseName: warehouseData.warehouseName,
-                        warehouseManagerName: warehouseData.warehouseManagerName,
-                    };
-                }
-                return dispatch;
-            });
-            setDispatches(updatedDispatches);
-            setWarehouseAssignmentModal(false);
-        })
-        .catch(error => {
-            console.error('창고 배정 중 에러 발생:', error);
-        });
-    };
-
-
-
-    //출고지시 모달에서 저장된 데이터 받기
-    const handleDispatchInstructionSave = (formData) => {
-        const selectedDispatchNos = filteredDispatches
-            .filter((_, index) => selectedDispatches[index])
-            .map(dispatch => dispatch.dispatchNo);
-
-        axios.post('/api/orderDispatch/release', {
-            dispatchNos: selectedDispatchNos,
-            ...formData
-        })
-            .then(response => {
-                
-                setDispatchInstructionModal(false);
-
-                // 상태 업데이트
-                const updatedDispatches = dispatches.map((dispatch) => {
-                    if (selectedDispatchNos.includes(dispatch.dispatchNo)) {
-                        return {
-                            ...dispatch,
-                            dispatchStatus: 'inProgress',
-                            dispatchStartDate: new Date(),
-                        };
-                    }
-                    return dispatch;
-                });
-                setDispatches(updatedDispatches);
+              // 데이터 갱신
+              mutate();
+              setWarehouseAssignmentModal(false);
             })
             .catch(error => {
-                console.error('출고 지시 중 에러 발생:', error);
+              console.error('창고 배정 중 에러 발생:', error);
             });
     };
 
 
-    // 상태 변경 콜백 함수
-const handleStatusChange = (dispatchNo, newStatus) => {
-    const updatedDispatches = dispatches.map(dispatch => {
-      if (dispatch.dispatchNo === dispatchNo) {
-        return {
-          ...dispatch,
-          dispatchStatus: newStatus,
-          dispatchStartDate: new Date() // 출고 시작일시 업데이트
-        };
-      }
-      return dispatch;
-    });
-    setDispatches(updatedDispatches);
-  
-    // 필터 타입을 'inProgress'로 변경하여 출고요청 탭으로 이동
-    setFilterType('inProgress');
-  };
+      // 출고지시 모달에서 저장된 데이터 받기
+      const handleDispatchInstructionSave = (formData) => {
+        const selectedDispatchNos = filteredDispatches
+          .filter((_, index) => selectedDispatches[index])
+          .map(dispatch => dispatch.dispatchNo);
+
+        axios.post('/api/orderDispatch/release', {
+          dispatchNos: selectedDispatchNos,
+          ...formData
+        })
+        .then(response => {
+          setDispatchInstructionModal(false);
+
+          // 데이터 갱신
+          mutate();
+        })
+        .catch(error => {
+          console.error('출고 지시 중 에러 발생:', error);
+        });
+      };
+
+
+      // 상태 변경 콜백 함수
+      const handleStatusChange = (dispatchNo, newStatus) => {
+        // 상태 변경 후 데이터 갱신
+        mutate();
+        // 필터 타입을 'inProgress'로 변경하여 출고요청 탭으로 이동
+        setFilterType('inProgress');
+      };
   
 
     
@@ -877,35 +856,36 @@ const handleStatusChange = (dispatchNo, newStatus) => {
         }
     };
 
-    // 체크된 것만 삭제
-    const deleteDispatches = () => {
-        const selectedDispatchNos = filteredDispatches
-            .filter((_, index) => selectedDispatches[index])
-            .map(dispatch => dispatch.dispatchNo);
+     // 체크된 것만 삭제
+     const deleteDispatches = () => {
+       const selectedDispatchNos = filteredDispatches
+         .filter((_, index) => selectedDispatches[index])
+         .map(dispatch => dispatch.dispatchNo);
 
-        if (selectedDispatchNos.length === 0) {
-            window.showToast("삭제할 출고 항목을 선택해주세요.", 'error');
-            return;
-        }
+       if (selectedDispatchNos.length === 0) {
+         window.showToast("삭제할 출고 항목을 선택해주세요.", 'error');
+         return;
+       }
 
-        window.confirmDispatch('선택한 출고 사항을 삭제하시겠습니까?').then(result => {
-            if (result) {
-                axios.post('/api/orderDispatch/delete', selectedDispatchNos)
-                    .then(response => {
-                        window.showToast("삭제가 완료 되었습니다.");
+       window.confirmDispatch('선택한 출고 사항을 삭제하시겠습니까?').then(result => {
+         if (result) {
+           axios.post('/api/orderDispatch/delete', selectedDispatchNos)
+             .then(response => {
+               window.showToast("삭제가 완료 되었습니다.");
 
-                        // 화면 갱신을 위해 삭제된 항목 제외하고 다시 가져오기
-                        fetchData();
-                        setPage(1);
-                    })
-                    .catch(error => {
-                        console.error('삭제 중 발생된 에러 : ', error);
-                    });
-            }
-        });
-    };
+               // 데이터 갱신
+               mutate();
+               setPage(1);
+             })
+             .catch(error => {
+               console.error('삭제 중 발생된 에러 : ', error);
+             });
+         }
+       });
+     };
 
-    
+
+
     return (
         <Layout currentMenu="orderDispatch">
              <main className={`main-content menu_orderDispatch `}>
