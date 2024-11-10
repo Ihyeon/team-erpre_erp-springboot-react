@@ -13,5 +13,8 @@
 .menu_mail .table_wrap table td { padding: 12px 8px; text-align: left; } 
 
 /* 검색창 너비 지정 */
-.mail-search .mail-search-box { width: 97% !important} 
+.mail-search .mail-search-box { width: 97% !important } 
+
+/* 보낸메일 행 */
+.send_tr { cursor: pointer; } 
 
