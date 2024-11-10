@@ -83,6 +83,7 @@ public class EmailSendService {
                     emailFileSend.setEmailFileSizeS(file.getSize()); // 업로드된 파일의 크기(바이트 단위로)
                     emailFileSend.setEmailFileTypeS(file.getContentType()); // 파일의 MIME 타입(img,pdf 등)
 
+                    emailFileRepository.save(emailFileSend); //첨부파일 정보를 DB에 저장함
                 }
             }
             // 실제로 이메일 전송
