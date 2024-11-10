@@ -28,5 +28,6 @@ public class DispatchController {
     @GetMapping("/get/dispatch/inProgress/{warehouseNo}")
     public List<AndroidDispatchDTO> getInProgressDispatches(@PathVariable Integer warehouseNo) {
         return dispatchService.getInProgressDispatches(warehouseNo);
+        //
     }
 }
