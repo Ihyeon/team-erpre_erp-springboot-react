@@ -254,22 +254,4 @@ public class MessengerController {
         }
     }
 
-//    // 채팅 메시지 파일 업로드 API
-//    @PostMapping("/chat/{chatMessageNo}/upload")
-//    public ResponseEntity<?> uploadChatFiles(
-//            @PathVariable Long chatMessageNo,
-//            @RequestParam("files") List<MultipartFile> files) {
-//
-//        try {
-//            List<String> fileUrls = messengerService.uploadChatFiles(chatMessageNo, files);
-//            return ResponseEntity.ok(fileUrls);
-//        } catch (IOException e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body("파일 업로드 중 오류 발생: " + e.getMessage());
-//        } catch (NoSuchElementException e) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//                    .body("해당 메시지를 찾을 수 없습니다.");
-//        }
-//    }
-
 }

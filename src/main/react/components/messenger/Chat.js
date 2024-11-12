@@ -9,7 +9,6 @@ import {UserContext} from "../../context/UserContext";
 const Chat = ({
                   chatList,
                   setChatList,
-                  formatDate,
                   selectedChat,
                   isChatModalOpen,
                   openChatModal,
@@ -31,6 +30,26 @@ const Chat = ({
     const [isEmployeeSearchModalOpen, setEmployeeSearchModalOpen] = useState(false);
     const openEmployeeSearchModal = () => setEmployeeSearchModalOpen(true);
     const closeEmployeeSearchModal = () => setEmployeeSearchModalOpen(false);
+
+    // 날짜와 시간 포맷팅 함수
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const now = new Date();
+
+        const isToday = date.getDate() === now.getDate() &&
+            date.getMonth() === now.getMonth() &&
+            date.getFullYear() === now.getFullYear();
+
+        if (isToday) {
+            const hours = date.getHours();
+            const minutes = date.getMinutes();
+            const ampm = hours >= 12 ? '오후' : '오전';
+            return `${ampm} ${hours % 12 || 12}:${minutes.toString().padStart(2, '0')}`;
+        } else {
+            return `${date.getMonth() + 1}월 ${date.getDate()}일`;
+        }
+    };
+
 
     return (
         <div className="chat-list-container">
@@ -101,7 +120,9 @@ const Chat = ({
                                     </span>
                                 </div>
                                 <div className="last-message">
-                                    {chat.chatMessageContent || ''}
+                                    {chat.chatMessageContent
+                                        ? chat.chatMessageContent
+                                        : (chat.chatFileUrl ? '사진' : '') }
                                 </div>
                             </div>
                         </li>
