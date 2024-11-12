@@ -13,25 +13,62 @@ function ReceivedMail() {
   const [isLoading, setLoading] = useState(true); // 로딩 상태 관리
   const [showModal, setShowModal] = useState(false);// 모달 띄움
   const [receiveData, setReceiveData] = useState([]);
-  const employeeId = localStorage.getItem('employeeId');
+  // const [receiveViewMail, setReceiveViewMail] = useState([]);
+  const employeeEmail = localStorage.getItem('employeeEmail');
 
-  // 보낸 메일 조회
+  // 보낸 메일 저장
   useEffect(() => {
     const fetchReceiveEmail = async () => {
       try {
-        const response = await axios.get(`/api/email/receive`);
+        console.log("employeeEmail:", employeeEmail);  // employeeId 값 출력
+        const response = await axios.get(`/api/email/receive/${employeeEmail}`, {
+          params: {
+            username: 'hojinkim001155@gmail.com',
+            password: 'icsw xsat ynhm aeqp'
+          }
+        });
         setReceiveData(response.data);
-        setLoading(false); // 로딩 완료 후 false로 설정
+        setLoading(false);
       } catch (error) {
-        console.error('보낸메일을 불러오지 못하였습니다.', error);
+        console.error('받은메일을 불러오지 못하였습니다.', error);
       }
     };
-    if (employeeId) {
+    if (employeeEmail) {
       fetchReceiveEmail();
     }
-  }, [employeeId]);
+  }, [employeeEmail]);
   console.log(receiveData); // 보낸 메일 내역
 
+
+  // // 받은 메일 조회
+  // useEffect(() => {
+  //   const fetchReceiveEmail = async () => {
+  //     try {
+  //       const response = await axios.get(`/api/email/receive/read/${employeeId}`);
+  //       setReceiveViewMail(response.data);
+  //       setLoading(false);
+  //     } catch (error) {
+  //       console.error('보낸메일을 불러오지 못하였습니다.', error);
+  //     }
+  //   };
+  //   if (employeeId) {
+  //     fetchReceiveEmail();
+  //   }
+  // }, [employeeId]);
+  // console.log(receiveViewMail);
+
+ //모달 관련 hooks
+  // 🟡 모달 열기
+  const openModal = (emailData) => {
+    setSelectedEmail(emailData);
+    console.log("sentMail에서 선택된 이메일 데이터:", emailData); // 선택된 이메일 데이터 확인
+    setShowModal(true);
+  };
+
+  // 모달 닫기
+  const closeModal = () => {
+    setShowModal(false);
+  };
 
   return (
 
@@ -111,13 +148,13 @@ function ReceivedMail() {
                     </td>
                   </tr>
                 ) : (
-                  sendData.length > 0 ? (
-                    sendData.map((email, index) => (
-                      <tr key={index} onClick={() => openModal(email)} className='send_tr'>
+                  receiveData.length > 0 ? (
+                    receiveData.map((email, index) => (
+                      <tr key={index} onClick={() => openModal(email)} className='receive_tr'>
                         <td><input type="checkbox" /></td>
-                        <td>{email.emailAddrReceiveS}</td>
-                        <td>{email.emailSubjectS}</td>
-                        <td>{new Date(email.emailDateS).toLocaleString()}</td>
+                        <td>{email.emailAddrSendR}</td>
+                        <td>{email.emailSubjectR}</td>
+                        <td>{new Date(email.emailDateR).toLocaleString()}</td>
                       </tr>
                     ))
                   ) : (

@@ -49,4 +49,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, String>, Emp
     // employeeId로 Employee 엔티티 조회 (로그인)
     Optional<Employee> findByEmployeeId(String employeeId);
 
+    
+
 }

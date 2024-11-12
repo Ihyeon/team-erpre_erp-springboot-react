@@ -2,8 +2,12 @@ package com.project.erpre.repository;
 
 import com.project.erpre.model.entity.EmailReceive;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import java.util.List;
 
-@Repository
+
 public interface EmailReceiveRepository extends JpaRepository<EmailReceive, Integer> {
+
+    // 받은 메일 내역 조회 (받은메일함)
+    List<EmailReceive> findByEmployeeId(String employeeId);
+
 }
