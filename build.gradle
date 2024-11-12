@@ -59,6 +59,9 @@ dependencies {
 	implementation 'com.sun.mail:javax.mail:1.6.2' // JavaMail API 추가 의존성 (수신용 IMAP)
 	implementation 'org.jsoup:jsoup:1.14.3' // HTML을 파싱하고 조작할 수 있는 Java 라이브러리
 	implementation 'software.amazon.awssdk:s3:2.29.8' // AWS S3 첨부파일
+	implementation 'io.github.cdimascio:java-dotenv:5.2.2' // 계정 보안 env 파일 라이브러리
+
+
 
 	implementation 'com.itextpdf:itextpdf:5.5.13.3' //pdf 다운로드
 	//Microsoft Office 문서 다운로드

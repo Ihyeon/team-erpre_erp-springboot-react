@@ -75,37 +75,44 @@ public class EmailSendController {
         }
     }
 
-    // 이메일 뷰어 첨부파일
-    @GetMapping("/files/download/{emailFileNmS}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable Integer emailFileNmS) { // 파일을 다운로드해야되기에 HTTP응답으로 반환 위해
-                                                                                       // Resource객체 사용
-        try {
-            EmailFileSend fileSend = emailService.getSendFileById(emailFileNmS); // 첨부파일번호로 해당 파일을 조회
-            FileSystemResource fileResource = new FileSystemResource(fileSend.getEmailFileUrlS()); // FileSystmeResource는
-                                                                                                   // 파일시스템에서 파일을 읽음 //
-                                                                                                   // 파일경로가져옴
-
-            if (!fileResource.exists()) {
-                String errorMessage = "요청하신 파일을 찾을 수 없습니다. 파일이 삭제되었거나 경로가 잘못되었습니다.";
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ByteArrayResource(errorMessage.getBytes())); // ByteArrayResource를 사용해 오류 메시지를 반환
-            }
-
-            // 설정된 파일이름으로 다운로드
-            HttpHeaders headers = new HttpHeaders(); // 다운로드할 때 파일이름 설정위해 HTTPHeaders 사용
-            headers.add(HttpHeaders.CONTENT_DISPOSITION,
-                    "attachment; filename=\"" + fileSend.getEmailFileNameS() + "\""); // Content-Disposition 헤더를
-                                                                                      // attachment로 설정하여 파일을 다운로드로
-                                                                                      // 처리하고, 파일 이름을 emailFileNameS에서
-                                                                                      // 가져와 설정
-
-            return ResponseEntity.ok()
-                    .headers(headers)
-                    .body(fileResource);
-        } catch (Exception e) {
-            String errorMessage = "파일을 다운로드하는 도중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ByteArrayResource(errorMessage.getBytes())); // ByteArrayResource를 사용해 오류 메시지를 반환
-        }
+    // 이메일 뷰어 첨부파일 목록
+    @GetMapping("files/list/{emailFileNmS}")
+    public ResponseEntity<List<EmailFileSend>> getEmailFiles(@PathVariable Integer emailFileNmS) {
+        List<EmailFileSend> files = emailService.getFilesByEmailId(emailFileNmS);
+        return ResponseEntity.ok(files);
     }
+
+    // // 이메일 뷰어 첨부파일 다운로드
+    // @GetMapping("/files/download/{emailFileNmS}")
+    // public ResponseEntity<Resource> downloadFile(@PathVariable Integer emailFileNmS) { // 파일을 다운로드해야되기에 HTTP응답으로 반환 위해
+    //                                                                                    // Resource객체 사용
+    //     try {
+    //         EmailFileSend fileSend = emailService.getSendFileById(emailFileNmS); // 첨부파일번호로 해당 파일을 조회
+    //         FileSystemResource fileResource = new FileSystemResource(fileSend.getEmailFileUrlS()); // FileSystmeResource는
+    //                                                                                                // 파일시스템에서 파일을 읽음 //
+    //                                                                                                // 파일경로가져옴
+
+    //         if (!fileResource.exists()) {
+    //             String errorMessage = "요청하신 파일을 찾을 수 없습니다. 파일이 삭제되었거나 경로가 잘못되었습니다.";
+    //             return ResponseEntity.status(HttpStatus.NOT_FOUND)
+    //                     .body(new ByteArrayResource(errorMessage.getBytes())); // ByteArrayResource를 사용해 오류 메시지를 반환
+    //         }
+
+    //         // 설정된 파일이름으로 다운로드
+    //         HttpHeaders headers = new HttpHeaders(); // 다운로드할 때 파일이름 설정위해 HTTPHeaders 사용
+    //         headers.add(HttpHeaders.CONTENT_DISPOSITION,
+    //                 "attachment; filename=\"" + fileSend.getEmailFileNameS() + "\""); // Content-Disposition 헤더를
+    //                                                                                   // attachment로 설정하여 파일을 다운로드로
+    //                                                                                   // 처리하고, 파일 이름을 emailFileNameS에서
+    //                                                                                   // 가져와 설정
+
+    //         return ResponseEntity.ok()
+    //                 .headers(headers)
+    //                 .body(fileResource);
+    //     } catch (Exception e) {
+    //         String errorMessage = "파일을 다운로드하는 도중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //                 .body(new ByteArrayResource(errorMessage.getBytes())); // ByteArrayResource를 사용해 오류 메시지를 반환
+    //     }
+    // }
 }

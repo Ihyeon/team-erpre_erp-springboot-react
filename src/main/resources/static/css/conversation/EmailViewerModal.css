@@ -1,0 +1,34 @@
+/* src/main/resources/static/css/conversation/EmailViewerModal.css */
+/* 🔴 모달 */
+.email-viewer-container { background-color: #fff; position: fixed; top: 52%; left: 52.5%; transform: translate(-50%, -50%); border: 1px solid #ccc; border-radius: 20px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); z-index: 1000; padding: 25px; overflow: hidden; width: 77%; height: 80%; }
+
+.email-actions { display: flex; gap: 10px; margin-bottom: 15px; }
+
+.email-actions .action-link { color: #0073e6; text-decoration: none; padding: 5px 10px; border: 1px solid #ddd; border-radius: 4px; }
+
+.email-actions .action-link:hover { background-color: #e3e3e3; }
+
+.email-subject { font-size: 24px; margin: 10px 0; }
+
+.email-meta { font-size: 12px; color: #888; margin-bottom: 15px; }
+
+.email-info { margin-bottom: 15px; font-size: 14px; }
+
+.email-info p { margin: 5px 0; }
+
+.email-info .email-address a { color: #0073e6; text-decoration: none; }
+
+.email-info .add-contact { color: #0073e6; text-decoration: underline; margin-left: 10px; }
+
+.email-text { padding: 15px; border-radius: 4px; border-top: 1px solid #e3e3e3; }
+
+.email-text p { margin: 10px 0; }
+
+.file-section { padding: 15px; border-radius: 4px; border-top: 1px solid #e3e3e3; position: fixed; bottom: 15%; width: 96.5%; cursor: pointer; color: #007CC1; overflow: hidden; background-color: #f9f9f9;}
+
+.file-name {padding: 0 3px 3px 3px; width: 100%;}
+
+.file-map:hover {background-color: #e9f5fb;}
+
+.btn_close { position: fixed; top: 5%; right: 2.5%; background: none; border: none; outline: none; font-size: 20px; cursor: pointer; line-height: 1; transition: all 0.3s; border-radius: 50%; padding: 4px 4px; }
+.btn_close:hover { color: #007CC1; background-color: #e4f1f7a3; } 

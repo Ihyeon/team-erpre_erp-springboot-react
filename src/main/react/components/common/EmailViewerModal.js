@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter } from "react-router-dom";
 import ReactDOM from 'react-dom/client';
 import DOMPurify from 'dompurify';
-import '../../../resources/static/css/conversation/EmailViewer.css';
+import '../../../resources/static/css/conversation/EmailViewerModal.css';
 import Layout from "../../layout/Layout";
 import axios from 'axios';
 
@@ -19,6 +19,9 @@ function EmailViewerModal({ selectedEmailData, closeModal }) {
       closeModal();
     }
   };
+
+  // 첨부된 파일 이름 + 용량
+  const [fileInfo, setFileInfo] = useState([]);
 
   //선택한 메일을 불러옴
   useEffect(() => {
@@ -44,6 +47,25 @@ function EmailViewerModal({ selectedEmailData, closeModal }) {
   // if (!emailData) {
   //   return <div>이메일 데이터를 불러오는 중입니다...</div>;
   // }
+
+
+  // 이메일 뷰어 첨부파일 내역
+  const [viewFileInfo, setViewFileInfo] = useState([]);
+
+  //보낸첨부파일 내역 불러옴
+  useEffect(() => {
+    const fetchEmailFileDetail = async () => {
+      try {
+        const response = await axios.get(`/api/email/files/list/${selectedEmailData.emailNmS}`);
+        setViewFileInfo(response.data);
+      } catch (error) {
+        console.error('첨부파일을 읽어오지 못하였습니다.', error);
+      }
+    };
+    if (selectedEmailData) {
+      fetchEmailFileDetail();
+    }
+  }, [selectedEmailData]);
 
   // 이메일 내용부분 xxs공격 방지위해 Dompurify 정화
   const sanitizeHTML = (html) => {
@@ -79,6 +101,34 @@ function EmailViewerModal({ selectedEmailData, closeModal }) {
         <div className="email-text"
           dangerouslySetInnerHTML={{ __html: sanitizeHTML(emailData?.emailTextS || '내용 없음') }}
         ></div>
+
+
+        <label >
+          <div className="file-section">
+            {viewFileInfo.length > 0 ? (
+              <table>
+                <thead>
+                  <tr className='fileBox-title'>
+                  </tr>
+                </thead>
+                <tbody>
+                  {viewFileInfo.map((file, index) => (
+                    <tr key={index} className='file-map'>
+                      <td className='fileBox-delete-icon'>
+                      </td>
+                      <td className='file-name'>{file.emailFileNameS}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className='no-files-message'>
+                첨부파일 없음
+              </div>
+            )}
+
+          </div>
+        </label>
       </div>
     </div>
 

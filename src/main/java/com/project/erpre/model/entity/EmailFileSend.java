@@ -1,5 +1,6 @@
 package com.project.erpre.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.*;
 
 import javax.persistence.*;
@@ -22,6 +23,7 @@ public class EmailFileSend {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "email_nm_s", nullable = false)
+    @JsonBackReference
     private EmailSend emailNmS;  // 발신 이메일 외래 키
 
     @Column(name = "email_file_name_s", nullable = false)
