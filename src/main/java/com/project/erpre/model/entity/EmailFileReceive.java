@@ -37,7 +37,7 @@ public class EmailFileReceive {
     private String emailFileTypeR;
 
     @Column(name = "email_file_del_yn_r", nullable = false, columnDefinition = "VARCHAR(10) DEFAULT 'n'")
-    private String emailFileDelYnR;
+    private String emailFileDelYnR = "n";
 
     @Column(name = "email_file_del_date_r")
     private Timestamp emailFileDelDateR;

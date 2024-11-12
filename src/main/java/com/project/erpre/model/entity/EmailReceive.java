@@ -7,7 +7,7 @@ import java.sql.Timestamp;
 import java.util.List;
 
 @Entity
-@Table(name =  "m_email_receive")
+@Table(name = "m_email_receive")
 @Data
 @Getter
 @Setter
@@ -21,8 +21,9 @@ public class EmailReceive {
     @Column(name = "email_nm_r")
     private Integer emailNmR;
 
+    // 직원 테이블 외래키 참조
     @Column(name = "email_id_r", nullable = false)
-    private String emailIdR;  // 수신 직원 ID
+    private String employeeId;  // 수신 직원 ID
 
     @Column(name = "email_addr_send_r", nullable = false)
     private String emailAddrSendR;  // 발신 직원 이메일
@@ -37,7 +38,7 @@ public class EmailReceive {
     private Timestamp emailDateR;
 
     @Column(name = "email_status_r", nullable = false, columnDefinition = "VARCHAR(10) DEFAULT 'nr'")
-    private String emailStatusR;
+    private String emailStatusR = "nr";
 
     @OneToMany(mappedBy = "emailNmR", cascade = CascadeType.ALL)
     private List<EmailFileReceive> receivedEmailFiles;  // 수신 이메일의 첨부파일 리스트

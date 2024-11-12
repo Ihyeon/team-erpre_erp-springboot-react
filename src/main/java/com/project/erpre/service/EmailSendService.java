@@ -98,7 +98,7 @@ public class EmailSendService {
         }
     }
 
-    // 보낸메일 내역 조회
+    // 보낸메일 전체 조회
     public List<EmailSend> getEmailSendByEmployeeId(String employeeId) {
         return emailRepository.findByEmployeeId(employeeId);
     }
