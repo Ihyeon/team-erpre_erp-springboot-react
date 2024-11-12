@@ -5,6 +5,8 @@ import Layout from "../../layout/Layout";
 import '../../../resources/static/css/common/Main.css';
 import axios from 'axios';
 import {MessengerProvider} from "../../context/MessengerContext";
+import {UserContext, UserProvider} from '../../context/UserContext';
+
 
 
 function Main() {
@@ -96,7 +98,8 @@ function Main() {
     }, []);
 
     return (
-        <MessengerProvider>
+        <UserProvider>
+            <MessengerProvider>
         <Layout currentMenu="main">
             <main className="main-content dashboard-container">
                 <div className="card card-large" onClick={() => window.location.href = '/orderList?mode=Assigned'}>
@@ -168,7 +171,8 @@ function Main() {
                 </div>
             </main>
         </Layout>
-        </MessengerProvider>
+            </MessengerProvider>
+        </UserProvider>
     );
 }
 

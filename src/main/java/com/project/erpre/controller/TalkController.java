@@ -11,12 +11,14 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
+import java.util.List;
 
 // 웹소켓 메시지 커치
 // 클라이언트 간 실시간 메시지 전송 (채팅, 쪽지, 알림 등)
 // STOMP 프로토콜을 이용해 메시지를 처리하고 브로드캐스트
 @Controller
 public class TalkController {
+
 
     private final MessengerService messengerService;
     private final SimpMessagingTemplate messagingTemplate;
@@ -27,23 +29,17 @@ public class TalkController {
         this.messagingTemplate = messagingTemplate;
     }
 
-    // 🟠 쪽지 메세지 전송 및 저장
+//    // 🟠 쪽지 메세지 전송 및 저장
 //    @MessageMapping("/note")
 //    public void sendNote(MessageDTO message, Principal principal) {
-//
 //        String senderId = principal.getName();
-//        message.getEmployee().getEmployeeId(senderId);
 //
-//        // 수신자 목록 가져오기 (예: 수신자 ID들을 리스트로 포함)
-//        List<String> receiverIds = noteMessage.getReceiverIds(); // ChatMessageDTO에 수신자 ID 리스트가 있다고 가정
-//
-//        // 메시지 DB에 저장 (다수의 수신자에 대해 별도의 로직을 구현)
-//        ChatMessageDTO savedNote = messengerService.saveNoteMessage(noteMessage, senderId, receiverIds);
+//        // 메시지 저장 처리
+//        ChatMessageDTO savedNote = messengerService.saveNoteMessage(message, senderId);
 //
 //        // 각 수신자에게 메시지 전송
-//        for (String receiverId : receiverIds) {
+//        for (String receiverId : message.getReceiverIds()) {
 //            messagingTemplate.convertAndSendToUser(receiverId, "/queue/note", savedNote);
-//            System.out.println("쪽지 전송 완료 - 수신자: " + receiverId + ", 경로: /user/" + receiverId + "/queue/note, 메시지 내용: " + savedNote);
 //        }
 //    }
 

@@ -353,9 +353,9 @@ function ProductList() {
                                                     <span className='label_del'>삭제</span>
                                                 )}
                                             </td>
-                                            <td><span class="label_level level-1">{product.topCategory ? product.topCategory : '-'}</span></td>
-                                            <td><span class="label_level level-2">{product.middleCategory ? product.middleCategory : '-'}</span></td>
-                                            <td><span class="label_level level-3">{product.lowCategory ? product.lowCategory : '-'}</span></td>
+                                            <td><span className="label_level level-1">{product.topCategory ? product.topCategory : '-'}</span></td>
+                                            <td><span className="label_level level-2">{product.middleCategory ? product.middleCategory : '-'}</span></td>
+                                            <td><span className="label_level level-3">{product.lowCategory ? product.lowCategory : '-'}</span></td>
                                             <td>{product.productCd}</td>
                                             <td>{product.productNm}</td>
                                             <td>{product.productPrice ? product.productPrice.toLocaleString() : '-'}</td>

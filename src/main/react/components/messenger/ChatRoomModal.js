@@ -6,13 +6,12 @@ import SockJS from 'sockjs-client';
 import {Client as StompClient} from '@stomp/stompjs';
 import {IoClose} from "react-icons/io5";
 import {UserContext} from "../../context/UserContext";
-import {AiFillPicture, AiOutlineClose} from "react-icons/ai";
+import {AiFillPicture} from "react-icons/ai";
 import Picker from "emoji-picker-react";
 
 const ChatRoomModal = ({chatList, setChatList, chatNo, closeChatModal, fetchChatList}) => {
-
     const [isLoading, setIsLoading] = useState(false); // 로딩 state
-    const {user, setUser} = useContext(UserContext); // 현재 로그인한 유저 state
+    const {user} = useContext(UserContext); // 현재 로그인한 유저 state
     const [messages, setMessages] = useState([]); // 채팅방 메시지 목록 state
     const [message, setMessage] = useState(""); // 현재 입력중인 메시지 state
     const [image, setImage] = useState(null); // 이미지 파일
@@ -28,6 +27,30 @@ const ChatRoomModal = ({chatList, setChatList, chatNo, closeChatModal, fetchChat
     // 이모지 클릭 핸들러 함수
     const onEmojiClick = (emojiObject) => {
         setMessage(prevMessage => prevMessage + emojiObject.emoji); // 이모티콘을 메시지에 추가
+    };
+
+    const updateChatList = (newMessage) => {
+        setTimeout(() => {
+            setChatList(prevChatList => {
+
+                const updatedChatList = prevChatList.map(chat =>
+                    chat.chatNo === chatNo
+                        ? {
+                            ...chat,
+                            chatMessageContent: newMessage.chatMessageContent,
+                            chatSendDate: newMessage.chatSendDate
+                        }
+                        : chat
+                );
+
+                // 채팅방 리스트를 마지막 메시지 시간을 기준으로 내림차순 정렬
+                return updatedChatList.sort((a, b) => {
+                    const dateA = new Date(a.chatSendDate);
+                    const dateB = new Date(b.chatSendDate);
+                    return dateB - dateA; // 최신 메시지가 맨 위로 오도록 정렬
+                });
+            });
+        }, 0);
     };
 
     // 외부 클릭으로 이모티콘 창 닫기
@@ -49,8 +72,7 @@ const ChatRoomModal = ({chatList, setChatList, chatNo, closeChatModal, fetchChat
         const hours = date.getHours();
         const minutes = date.getMinutes();
         const ampm = hours >= 12 ? '오후' : '오전';
-        const formattedTime = `${ampm} ${hours % 12 || 12}:${minutes.toString().padStart(2, '0')}`;
-        return formattedTime;
+        return `${ampm} ${hours % 12 || 12}:${minutes.toString().padStart(2, '0')}`;
     };
 
     const formatDateHeader = (dateString) => {
@@ -80,7 +102,6 @@ const ChatRoomModal = ({chatList, setChatList, chatNo, closeChatModal, fetchChat
     };
 
     useEffect(() => {
-        // WebSocket 연결 설정
         const connectWebSocket = () => {
             if (!stompClientRef.current) {
                 const socket = new SockJS('http://localhost:8787/talk');
@@ -89,125 +110,111 @@ const ChatRoomModal = ({chatList, setChatList, chatNo, closeChatModal, fetchChat
                     reconnectDelay: 10000,
                     onConnect: () => {
                         console.log("WebSocket 연결 성공");
-                        subscribeToChat(chatNo); // 연결되면 현재 채팅방 구독
+                        subscribeToChat(chatNo); // 연결 후 채팅방 구독
                     },
-                    onStompError: (error) => {
-                        console.error("WebSocket 연결 오류:", error);
-                    },
-                    onDisconnect: () => {
-                        console.error("WebSocket 연결이 닫혔습니다.");
-                    }
+                    onStompError: (error) => console.error("WebSocket 연결 오류:", error),
+                    onDisconnect: () => console.error("WebSocket 연결이 닫혔습니다."),
                 });
 
                 stompClientRef.current = stompClient;
                 stompClient.activate();
             } else {
-                // 기존 WebSocket 연결이 있을 경우 새로운 채팅방으로 구독 변경
                 subscribeToChat(chatNo);
             }
         };
 
+        // 구독 함수
         const subscribeToChat = (chatNo) => {
-            // 이전 구독이 있다면 해제
             if (subscriptionRef.current) {
                 subscriptionRef.current.unsubscribe();
                 console.log(`기존 채팅방 /topic/chat/${chatNo} 구독 해제`);
             }
 
-            // 새로운 채팅방 구독 설정
             subscriptionRef.current = stompClientRef.current.subscribe(`/topic/chat/${chatNo}`, (message) => {
                 const newMessage = JSON.parse(message.body);
-                console.log("새로운 메시지 수신:", newMessage);
-
-                // 중복 여부 확인 후 메시지 추가
                 setMessages((prevMessages) => {
-                    const isDuplicate = prevMessages.some((msg) => msg.chatMessageNo === newMessage.chatMessageNo);
-                    if (!isDuplicate) {
-                        // 현재 채팅방 메시지 업데이트
-                        const updatedMessages = [...prevMessages, newMessage];
-
-                        // 채팅 목록 업데이트
-                        setChatList(prevChatList => {
-                            return prevChatList.map(chat =>
-                                chat.chatNo === chatNo
-                                    ? {
-                                        ...chat,
-                                        chatMessageContent: newMessage.chatMessageContent,
-                                        chatSendDate: newMessage.chatSendDate
-                                    }
-                                    : chat
-                            );
-                        });
-
-                        return updatedMessages;
+                    if (!prevMessages.some((msg) => msg.chatMessageNo === newMessage.chatMessageNo)) {
+                        updateChatList(newMessage);
+                        scrollToBottom();
+                        return [...prevMessages, newMessage];
                     }
                     return prevMessages;
                 });
             });
-
             console.log(`채팅방 /topic/chat/${chatNo} 구독 완료`);
         };
 
-        // 채팅방 데이터 가져오기
         fetchChatRoom();
-
-        // WebSocket 연결 시작
         connectWebSocket();
 
         return () => {
-            // 컴포넌트 언마운트 시 구독 및 연결 해제
             if (subscriptionRef.current) {
                 subscriptionRef.current.unsubscribe();
                 subscriptionRef.current = null;
                 console.log("WebSocket 구독 해제");
             }
+            if (stompClientRef.current) {
+                stompClientRef.current.deactivate(); // WebSocket 연결 해제
+                stompClientRef.current = null;
+                console.log("WebSocket 연결 해제");
+            }
         };
-    }, [chatNo]);
+    }, [chatNo, setChatList]);
 
-    // 메시지 전송 함수
+
     const handleSendMessage = async () => {
         if (!message.trim() && !image) {
             alert("메시지 내용을 입력하세요.");
             return;
         }
 
-        if (stompClientRef.current && stompClientRef.current.connected) {
-            let imageUrl = null;
+        try {
+            if (stompClientRef.current && stompClientRef.current.connected) {
+                let imageUrl = null;
 
-            if (image) {
-                const formData = new FormData();
-                formData.append("file", image);
-                formData.append("fileType", "chat");
+                if (image) {
+                    const formData = new FormData();
+                    formData.append("file", image);
+                    formData.append("fileType", "chat");
 
-                try {
-                    const response = await axios.post("/api/files/upload", formData, {
-                        headers: { "Content-Type": "multipart/form-data" },
-                    });
-                    imageUrl = `/api/files/chat/${response.data}`;
-                } catch (error) {
-                    console.error("이미지 업로드 중 오류 발생:", error);
-                    return;
+                    try {
+                        const response = await axios.post("/api/files/upload", formData, {
+                            headers: {"Content-Type": "multipart/form-data"},
+                        });
+                        imageUrl = `/api/files/chat/${response.data}`;
+                        console.log("Uploaded image URL:", imageUrl);
+
+                        scrollToBottom();
+                    } catch (error) {
+                        console.error("이미지 업로드 중 오류 발생:", error);
+                        return;
+                    }
                 }
+
+                const newMessage = {
+                    chatNo: chatNo,
+                    chatSenderId: user.employeeId,
+                    chatMessageContent: message || "", // 텍스트 내용
+                    chatFileUrl: imageUrl,             // 이미지 URL
+                    chatFileName: image ? image.name : null, // 이미지 파일명
+                    type: "message",
+                };
+
+                stompClientRef.current.publish({
+                    destination: `/app/chat/${chatNo}`,
+                    body: JSON.stringify(newMessage),
+                });
+
+                setMessage("");
+                setImage(null);
+                setImagePreview(null);
+                scrollToBottom();
+            } else {
+                alert("WebSocket 연결이 끊겼습니다. 다시 연결해주세요.");
             }
-
-            const newMessage = {
-                chatNo: chatNo,
-                chatSenderId: user.employeeId,
-                chatMessageContent: message || "", // 텍스트 내용
-                chatFileUrl: imageUrl,             // 이미지 URL
-                chatFileName: image ? image.name : null, // 이미지 파일명
-                type: "message",
-            };
-
-            stompClientRef.current.publish({
-                destination: `/app/chat/${chatNo}`,
-                body: JSON.stringify(newMessage),
-            });
-
-            setMessage("");
-            setImage(null);
-            setImagePreview(null);
-            scrollToBottom();
+        } catch (error) {
+            console.error("메시지 전송 중 오류 발생:", error);
+            alert("메시지 전송 중 오류가 발생했습니다. 다시 시도해 주세요.");
         }
     };
 
@@ -221,6 +228,7 @@ const ChatRoomModal = ({chatList, setChatList, chatNo, closeChatModal, fetchChat
             setImagePreview(URL.createObjectURL(selectedFile));
         } else {
             alert("이미지 파일만 업로드할 수 있습니다. (jpg, jpeg, png, gif)");
+            e.target.value = '';
         }
     };
 
@@ -235,18 +243,6 @@ const ChatRoomModal = ({chatList, setChatList, chatNo, closeChatModal, fetchChat
             chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
         }
     }, [messages]);
-
-    if (isLoading) {
-        return <div className="tr_empty">
-            <div>
-                <div className="loading">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-            </div>
-        </div>;
-    }
 
     // 날짜 구분선이 포함된 메시지 목록 생성
     const getMessagesWithDateSeparators = () => {
@@ -265,6 +261,22 @@ const ChatRoomModal = ({chatList, setChatList, chatNo, closeChatModal, fetchChat
         return result;
     };
 
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
+    if (isLoading) {
+        return <div className="tr_empty">
+            <div>
+                <div className="loading">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>;
+    }
+
     return (
         <div className="chat-room-modal">
             <Draggable handle=".chat-room-header">
@@ -282,9 +294,7 @@ const ChatRoomModal = ({chatList, setChatList, chatNo, closeChatModal, fetchChat
                             ) : (
                                 <div
                                     key={index}
-                                    className={`chat-message-container ${
-                                        message.chatSenderId === user.employeeId ? "own" : "other"
-                                    }`}
+                                    className={`chat-message-container ${message.chatSenderId === user.employeeId ? "own" : "other"}`}
                                 >
                                     {message?.chatSenderId !== user.employeeId && (
                                         <div className="message-recipient">
@@ -304,9 +314,7 @@ const ChatRoomModal = ({chatList, setChatList, chatNo, closeChatModal, fetchChat
                                             <span className="sender-name">{message.chatSenderName}</span>
                                         )}
                                         <div
-                                            className={`chat-message ${
-                                                message.chatSenderId === user.employeeId ? "own" : "other"
-                                            }`}
+                                            className={`chat-message ${message.chatSenderId === user.employeeId ? "own" : "other"}`}
                                         >
                                             {/* 이미지가 있을 경우 */}
                                             {message.chatFileUrl && (
@@ -320,17 +328,12 @@ const ChatRoomModal = ({chatList, setChatList, chatNo, closeChatModal, fetchChat
                                             {message.chatMessageContent && <p>{message.chatMessageContent}</p>}
                                         </div>
                                         <div
-                                            className={`message-timestamp ${
-                                                message.chatSenderId === user.employeeId
-                                                    ? "timestamp-right"
-                                                    : "timestamp-left"
-                                            }`}
+                                            className={`message-timestamp ${message.chatSenderId === user.employeeId ? "timestamp-right" : "timestamp-left"}`}
                                         >
                                             {formatDate(message.chatSendDate)}
                                         </div>
                                     </div>
                                 </div>
-
                             )
                         ))}
                     </div>
@@ -361,7 +364,7 @@ const ChatRoomModal = ({chatList, setChatList, chatNo, closeChatModal, fetchChat
                             <div className="chat-input-preview-wrapper">
                                 {imagePreview && (
                                     <div className="image-preview" onClick={removeImagePreview}>
-                                        <img src={imagePreview} alt="미리보기" className="preview-thumbnail" />
+                                        <img src={imagePreview} alt="미리보기" className="preview-thumbnail"/>
                                     </div>
                                 )}
                                 <input
@@ -375,7 +378,6 @@ const ChatRoomModal = ({chatList, setChatList, chatNo, closeChatModal, fetchChat
                             <button className="chat-room-submit-btn" onClick={handleSendMessage}>전송</button>
                         </div>
                     </div>
-
                 </div>
             </Draggable>
         </div>

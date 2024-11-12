@@ -1,12 +1,15 @@
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useContext, useEffect, useMemo, useRef, useState} from "react";
 import Draggable from "react-draggable";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import {FaRegPlusSquare} from "react-icons/fa";
 import UseEmployeeSearchModal from "./UseEmployeeSearchModal";
 import UseSearch from "./UseSearch";
+import { UserContext} from "../../context/UserContext";
 import { CustomToolbar } from "./CustomToolbar";
 import axios from "axios";
+import SockJS from "sockjs-client";
+import { Client as StompClient } from '@stomp/stompjs';
 
 const NewNoteModal = ({closeNewNoteModal, initialRecipients = [] }) => {
 
@@ -17,6 +20,8 @@ const NewNoteModal = ({closeNewNoteModal, initialRecipients = [] }) => {
     const [scheduledDate, setScheduledDate] = useState(""); // 예약 날짜 선택
     const [employeeSearchText, setEmployeeSearchText] = useState(""); // 직원 검색 텍스트
     const [isEmployeeSearchModalOpen, setEmployeeSearchModalOpen] = useState(false); // 직원 검색 모달창
+    const { user, setUser } = useContext(UserContext);
+    const stompClientRef = useRef(null);
 
     const {data: suggestions, searchLoading} = UseSearch("/api/messengers/employeeList", employeeSearchText);
 
@@ -40,6 +45,28 @@ const NewNoteModal = ({closeNewNoteModal, initialRecipients = [] }) => {
 
         closeEmployeeSearchModal();
     };
+
+    // 웹소켓 연결
+    useEffect(() => {
+        const socket = new SockJS('http://localhost:8787/talk');
+
+        stompClientRef.current = new StompClient({
+            webSocketFactory: () => socket,
+            reconnectDelay: 10000,
+            onConnect: () => {
+                console.log("쪽지 전송 WebSocket 연결 성공");
+            },
+            onDisconnect: () => console.log("WebSocket 연결이 닫혔습니다."),
+        });
+
+        stompClientRef.current.activate();
+
+        return () => {
+            stompClientRef.current.deactivate()
+                .then(() => console.log("WebSocket 연결이 성공적으로 해제되었습니다."))
+                .catch((error) => console.error("WebSocket 해제 중 오류:", error));
+        };
+    }, []);
 
     // 수신자 제거 함수
     const handleRemoveRecipient = (employeeId) => {
@@ -76,6 +103,7 @@ const NewNoteModal = ({closeNewNoteModal, initialRecipients = [] }) => {
         }
     },[]);
 
+    // 쪽지 전송 함수
     const handleSendNote = async () => {
         try {
             const receiverIds = sendToMe ? [] : recipients.map(r => r.employeeId);
@@ -85,11 +113,11 @@ const NewNoteModal = ({closeNewNoteModal, initialRecipients = [] }) => {
                 return;
             }
 
-            if (sendToMe) {
-                receiverIds.push(window.localStorage.getItem('employeeId'));
+            if (sendToMe && user && user.employeeId) {
+                receiverIds.push(user.employeeId);
             }
 
-            // 1. 노트 생성 API 호출
+            // 노트 생성 API 호출
             const response = await axios.post('/api/messengers/note/create', {
                 messageReceiverIds: recipients.map(r => r.employeeId),
                 messageContent: messageContent,
@@ -98,11 +126,9 @@ const NewNoteModal = ({closeNewNoteModal, initialRecipients = [] }) => {
             const newNote = response.data;
             console.log('전송된 쪽지:', newNote);
 
-            // 2. 실시간 전송 API 호출
-            await axios.post('/api/messengers/note/send', {
-                receiverIds: recipients.map(r => r.employeeId),
-                messageContent: newNote.messageContent,
-            });
+            // 실시간 전송 API 호출 (WebSocket을 사용하여 서버로 메시지 전송)
+            stompClientRef.current.send('/app/note', {}, JSON.stringify(newNote));
+
             closeNewNoteModal();
 
         } catch (error) {
@@ -148,7 +174,7 @@ const NewNoteModal = ({closeNewNoteModal, initialRecipients = [] }) => {
                                 </div>
                             </div>
                         </div>
-                        {/*/!* 자동완성 *!/*/}
+                        {/* 자동완성 */}
                         {/*suggestions.length > 0 && (*/}
                         {/*    <ul className="autocomplete-suggestions">*/}
                         {/*        {suggestions.map((employee) => (*/}

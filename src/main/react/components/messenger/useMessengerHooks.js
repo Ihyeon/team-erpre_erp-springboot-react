@@ -1,8 +1,9 @@
 import React, {useCallback, useContext, useEffect, useState} from "react";
-import { UserContext } from '../../context/UserContext';
 import axios from "axios";
 import { useDebounce } from "../common/useDebounce";
 import useSearch from "./UseSearch";
+import {UserContext} from "../../context/UserContext";
+
 
 export const useMessengerHooks = () => {
 
@@ -29,7 +30,7 @@ export const useMessengerHooks = () => {
     const [status, setStatus] = useState('offline')
 
     // 🔵 유저 정보 조회 Context
-    const { user } = useContext(UserContext);
+    const { user, setUser } = useContext(UserContext) || {}; // user의 기본값을 빈 객체로 설정
 
     // 🔵 유저 상태 & 로딩 useEffect
     useEffect(() => {

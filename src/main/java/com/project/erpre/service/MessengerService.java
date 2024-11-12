@@ -33,11 +33,10 @@ public class MessengerService {
 
     @PersistenceContext
     private EntityManager entityManager;
+    private static final Logger logger = LoggerFactory.getLogger(MessengerService.class);
 
     // SSE Emitter를 저장하는 컬렉션
     private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
-
-    private static final Logger logger = LoggerFactory.getLogger(MessengerService.class);
 
     private final FileService fileService;
 
@@ -346,24 +345,24 @@ public class MessengerService {
 
     }
 
-    // 실시간 알림 구독
-    public SseEmitter noteSubscribe() {
-        String senderId = getEmployeeIdFromAuthentication();
-        SseEmitter emitter = new SseEmitter();
-        emitters.put(senderId, emitter);
-
-        // 연결 종료 및 타임아웃 처리
-        emitter.onCompletion(() -> emitters.remove(senderId));
-        emitter.onTimeout(() -> emitters.remove(senderId));
-
-        try {
-            emitter.send(SseEmitter.event().name("INIT"));
-        } catch (Exception e) {
-            emitters.remove(senderId);
-        }
-
-        return emitter;
-    }
+//    // 실시간 알림 구독
+//    public SseEmitter noteSubscribe() {
+//        String senderId = getEmployeeIdFromAuthentication();
+//        SseEmitter emitter = new SseEmitter();
+//        emitters.put(senderId, emitter);
+//
+//        // 연결 종료 및 타임아웃 처리
+//        emitter.onCompletion(() -> emitters.remove(senderId));
+//        emitter.onTimeout(() -> emitters.remove(senderId));
+//
+//        try {
+//            emitter.send(SseEmitter.event().name("INIT"));
+//        } catch (Exception e) {
+//            emitters.remove(senderId);
+//        }
+//
+//        return emitter;
+//    }
 
 
     /////////////////////////////////////////////////////////////////////// 🔴 채팅
@@ -509,6 +508,10 @@ public class MessengerService {
         // 파일이 있는 경우 메타데이터 저장
         if (chatMessage.getChatFileUrl() != null) {
             saveChatFileMetadata(savedMessage, chatMessage.getChatFileUrl(), chatMessage.getChatFileName());
+
+            // 저장된 파일 메타데이터를 가져와서 savedMessageDTO에 설정
+            savedMessageDTO.setChatFileUrl(chatMessage.getChatFileUrl());
+            savedMessageDTO.setChatFileName(chatMessage.getChatFileName());
         }
 
         // 채팅방의 모든 참여자에 대해 ChatMessageRead 엔티티 생성
