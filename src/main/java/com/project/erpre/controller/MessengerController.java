@@ -131,18 +131,18 @@ public class MessengerController {
         return ResponseEntity.ok(messageDetail);
     }
 
-    // 새 쪽지 생성 API (파일url, 유형 등 추가)
-    @PostMapping("/note/create")
-    public ResponseEntity<MessageDTO> createNote(
-            @RequestBody MessageDTO.NoteRequestDTO noteRequestDTO) {
-
-        MessageDTO createdNote = messengerService.createNote(
-                noteRequestDTO.getMessageContent(),
-                noteRequestDTO.getMessageSendDate(),
-                noteRequestDTO.getMessageReceiverIds()
-        );
-        return ResponseEntity.ok(createdNote);
-    }
+//    // 새 쪽지 생성 API (파일url, 유형 등 추가)
+//    @PostMapping("/note/create")
+//    public ResponseEntity<MessageDTO> createNote(
+//            @RequestBody MessageDTO.NoteRequestDTO noteRequestDTO) {
+//
+//        MessageDTO createdNote = messengerService.createNote(
+//                noteRequestDTO.getMessageContent(),
+//                noteRequestDTO.getMessageSendDate(),
+//                noteRequestDTO.getMessageReceiverIds()
+//        );
+//        return ResponseEntity.ok(createdNote);
+//    }
 
     // 쪽지 북마크 상태 변경 API
     @PutMapping("/note/{messageNo}/bookmark")

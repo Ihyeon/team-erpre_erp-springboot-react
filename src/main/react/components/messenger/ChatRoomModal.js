@@ -140,6 +140,7 @@ const ChatRoomModal = ({chatList, setChatList, chatNo, closeChatModal, fetchChat
                     }
                     return prevMessages;
                 });
+                console.log("수신 메시지", newMessage);
             });
             console.log(`채팅방 /topic/chat/${chatNo} 구독 완료`);
         };

@@ -35,7 +35,7 @@ public class TalkController {
 //        String senderId = principal.getName();
 //
 //        // 메시지 저장 처리
-//        ChatMessageDTO savedNote = messengerService.saveNoteMessage(message, senderId);
+//        ChatMessageDTO savedNote = messengerService.createNote(message, senderId);
 //
 //        // 각 수신자에게 메시지 전송
 //        for (String receiverId : message.getReceiverIds()) {

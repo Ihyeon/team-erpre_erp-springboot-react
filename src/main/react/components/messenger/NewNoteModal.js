@@ -119,15 +119,19 @@ const NewNoteModal = ({closeNewNoteModal, initialRecipients = [] }) => {
 
             // 노트 생성 API 호출
             const response = await axios.post('/api/messengers/note/create', {
-                messageReceiverIds: recipients.map(r => r.employeeId),
+                messageReceiverIds: receiverIds,
                 messageContent: messageContent,
                 messageSendDate: scheduledSend ? scheduledDate : null,
             });
             const newNote = response.data;
             console.log('전송된 쪽지:', newNote);
 
-            // 실시간 전송 API 호출 (WebSocket을 사용하여 서버로 메시지 전송)
-            stompClientRef.current.send('/app/note', {}, JSON.stringify(newNote));
+            // WebSocket 연결이 설정되었는지 확인 후 send 호출
+            if (stompClientRef.current && stompClientRef.current.connected) {
+                stompClientRef.current.send('/app/note', {}, JSON.stringify(newNote));
+            } else {
+                console.error("WebSocket 연결이 설정되지 않았습니다.");
+            }
 
             closeNewNoteModal();
 
@@ -135,6 +139,8 @@ const NewNoteModal = ({closeNewNoteModal, initialRecipients = [] }) => {
             console.error('쪽지 전송 오류:', error);
         }
     };
+
+
 
 
 
