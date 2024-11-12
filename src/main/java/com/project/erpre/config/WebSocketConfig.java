@@ -24,15 +24,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .setAllowedOriginPatterns("*")
                 .setHandshakeHandler(new DefaultHandshakeHandler() {
                     @Override
-                    protected Principal determineUser(@NonNull ServerHttpRequest request, @NonNull WebSocketHandler wsHandler, @NonNull  Map<String, Object> attributes) {
-                        Principal user = request.getPrincipal();
-                        if (user == null) {
-                            logger.error("인증 정보를 찾을 수 없습니다.");
-                        }
-                        return user;
+                    protected Principal determineUser(@NonNull ServerHttpRequest request, @NonNull WebSocketHandler wsHandler, @NonNull Map<String, Object> attributes) {
+                        return null; // 모든 사용자가 접근 가능하도록 null 반환
                     }
                 })
-                .addInterceptors(new HttpSessionHandshakeInterceptor()) // 추가된 인터셉터
+                .addInterceptors(new HttpSessionHandshakeInterceptor())
                 .withSockJS();
     }
 
