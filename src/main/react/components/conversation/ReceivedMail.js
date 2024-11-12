@@ -1,12 +1,37 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter } from "react-router-dom";
 import ReactDOM from 'react-dom/client';
 import '../../../resources/static/css/conversation/ReceivedMail.css'
 import Layout from "../../layout/Layout";
 import Pagination from '../common/Pagination';
+import axios from 'axios';
+
 
 
 function ReceivedMail() {
+
+  const [isLoading, setLoading] = useState(true); // 로딩 상태 관리
+  const [showModal, setShowModal] = useState(false);// 모달 띄움
+  const [receiveData, setReceiveData] = useState([]);
+  const employeeId = localStorage.getItem('employeeId');
+
+  // 보낸 메일 조회
+  useEffect(() => {
+    const fetchReceiveEmail = async () => {
+      try {
+        const response = await axios.get(`/api/email/receive`);
+        setReceiveData(response.data);
+        setLoading(false); // 로딩 완료 후 false로 설정
+      } catch (error) {
+        console.error('보낸메일을 불러오지 못하였습니다.', error);
+      }
+    };
+    if (employeeId) {
+      fetchReceiveEmail();
+    }
+  }, [employeeId]);
+  console.log(receiveData); // 보낸 메일 내역
+
 
   return (
 
@@ -74,46 +99,37 @@ function ReceivedMail() {
 
                 </tr>
               </thead>
-              {/* 표 내용 */}
               <tbody>
-                {/* 로딩 중일 때 로딩 이미지 표시 + 화면 구성하고 주석제거 */}
-                {/* <tr className="tr_empty">
-                    <td colSpan="10">
-                      <div className="loading">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                      </div>
-                    </td>
-                  </tr>
+                {isLoading ? (
                   <tr className="tr_empty">
-                    <td colSpan="10">
-                      <div className="no_data">
-                        <i className="bi bi-exclamation-triangle"></i> 조회된 결과가 없습니다.
+                    <td colSpan="10"> {/* 로딩 애니메이션 중앙 배치 */}
+                      <div className="loading">
+                        <span></span> {/* 첫 번째 원 */}
+                        <span></span> {/* 두 번째 원 */}
+                        <span></span> {/* 세 번째 원 */}
                       </div>
                     </td>
-                  </tr> */}
-
-                <a href='#'>
-                  <tr>
-                    <td><input type="checkbox" /></td>
-                    <td>이름 / 이메일</td>
-
-                    <td>제목 + 내용</td>
-                    <td>일자</td>
                   </tr>
-                </a>
-
-                <a href='#'>
-                  <tr>
-                    <td><input type="checkbox" /></td>
-                    <td>이름 / 이메일</td>
-
-                    <td>제목 + 내용</td>
-                    <td>일자</td>
-                  </tr>
-                </a>
-
+                ) : (
+                  sendData.length > 0 ? (
+                    sendData.map((email, index) => (
+                      <tr key={index} onClick={() => openModal(email)} className='send_tr'>
+                        <td><input type="checkbox" /></td>
+                        <td>{email.emailAddrReceiveS}</td>
+                        <td>{email.emailSubjectS}</td>
+                        <td>{new Date(email.emailDateS).toLocaleString()}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr className="tr_empty">
+                      <td colSpan="10">
+                        <div className="no_data">
+                          <i className="bi bi-exclamation-triangle"></i> 조회된 결과가 없습니다.
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                )}
               </tbody>
             </table>
           </div>
@@ -123,7 +139,14 @@ function ReceivedMail() {
 
         </div>
       </main>
-
+      {
+        showModal && (
+          <EmailViewerModal
+            selectedEmailData={selectedEmail} //선택된 이메일 데이터를 모달에 전달
+            closeModal={closeModal} // 모달 닫기 함수 전달
+          />
+        )
+      }
     </Layout>
 
   );

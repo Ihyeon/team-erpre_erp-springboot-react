@@ -1,5 +1,6 @@
 package com.project.erpre.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.*;
 
 import javax.persistence.*;
@@ -42,6 +43,7 @@ public class EmailSend {
 
     // 첨부파일 리스트
     @OneToMany(mappedBy = "emailNmS", cascade = CascadeType.ALL)
+    @JsonManagedReference // emailFileSend와의 양방향 관계에서 순환 참조가 발생 무한재귀 방지
     private List<EmailFileSend> sentEmailFiles;  // 발신 이메일의 첨부파일 리스트
 
 

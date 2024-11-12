@@ -14,8 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import com.project.erpre.model.entity.EmailFileSend;
 import com.project.erpre.model.entity.EmailSend;
-import com.project.erpre.repository.EmailFileRepository;
-import com.project.erpre.repository.EmailRepository;
+import com.project.erpre.repository.EmailSendFileRepository;
+import com.project.erpre.repository.EmailSendRepository;
 import com.project.erpre.repository.EmployeeRepository;
 import com.sun.mail.smtp.SMTPAddressFailedException;
 
@@ -26,10 +26,10 @@ public class EmailSendService {
     private JavaMailSender mailSender;
 
     @Autowired
-    private EmailRepository emailRepository;
+    private EmailSendRepository emailRepository;
 
     @Autowired
-    private EmailFileRepository emailFileRepository;
+    private EmailSendFileRepository emailFileRepository;
 
     @Autowired
     private EmployeeRepository employeeRepository;
@@ -44,7 +44,7 @@ public class EmailSendService {
     // 이메일 전송
     @Transactional
     public EmailSend sendEmail(String to, String subject, String text, String from, String emailIds,
-                               List<MultipartFile> files) {
+            List<MultipartFile> files) {
 
         try {
             MimeMessage message = mailSender.createMimeMessage(); // 이메일 메세지 생성
@@ -83,7 +83,7 @@ public class EmailSendService {
                     emailFileSend.setEmailFileSizeS(file.getSize()); // 업로드된 파일의 크기(바이트 단위로)
                     emailFileSend.setEmailFileTypeS(file.getContentType()); // 파일의 MIME 타입(img,pdf 등)
 
-                    emailFileRepository.save(emailFileSend); //첨부파일 정보를 DB에 저장함
+                    emailFileRepository.save(emailFileSend); // 첨부파일 정보를 DB에 저장함
                 }
             }
             // 실제로 이메일 전송
@@ -109,9 +109,12 @@ public class EmailSendService {
     }
 
     // 보낸메일 첨부파일
-    public EmailFileSend getSendFileById(Integer emailFileNmS) {
-        return emailFileRepository.findById(emailFileNmS)
-                .orElseThrow(() -> new RuntimeException("파일을 찾을 수 없습니다"));
+    public List<EmailFileSend> getFilesByEmailId(Integer emailNmS) {
+        EmailSend email = findEmailById(emailNmS);
+        if (email == null) {
+            throw new RuntimeException("이메일을 찾을 수 없습니다.");
+        }
+        return emailFileRepository.findByEmailNmS(email); // 이메일 기준으로 첨부파일 목록을 조회
     }
 
 }
