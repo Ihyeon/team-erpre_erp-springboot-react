@@ -43,3 +43,6 @@ src/main/resources/static/bundle/*.bundle.js
 
 # VSC Local History Extension 백업 폴더
 .history/
+
+# 이메일 smtp/ imap 계정 보안 정보
+.env

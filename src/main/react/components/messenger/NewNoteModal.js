@@ -125,7 +125,6 @@ const NewNoteModal = ({closeNewNoteModal, initialRecipients = [] }) => {
             });
             const newNote = response.data;
             console.log('전송된 쪽지:', newNote);
-
             // WebSocket 연결이 설정되었는지 확인 후 send 호출
             if (stompClientRef.current && stompClientRef.current.connected) {
                 stompClientRef.current.send('/app/note', {}, JSON.stringify(newNote));

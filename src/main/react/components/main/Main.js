@@ -7,7 +7,6 @@ import axios from 'axios';
 
 
 
-
 function Main() {
     const [totalCustomers, setTotalCustomers] = useState(0);
     const [recentCustomers, setRecentCustomers] = useState([]);
@@ -97,7 +96,6 @@ function Main() {
     }, []);
 
     return (
-
         <Layout currentMenu="main">
             <main className="main-content dashboard-container">
                 <div className="card card-large" onClick={() => window.location.href = '/orderList?mode=Assigned'}>
