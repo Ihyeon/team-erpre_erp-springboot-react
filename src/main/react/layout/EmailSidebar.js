@@ -142,7 +142,7 @@ function EmailSidebar({ currentMenu }) {
 
                 <li>
                     <ul className="submenu one">
-                        <span className='menu-back' onClick={() => handleSubMenuClick('productCategory', '/productCategory')}>
+                        <span className='menu-back' onClick={() => handleSubMenuClick('main', '/main')}>
                             <i className="bi bi-box-arrow-in-left"></i>메인메뉴 이동
                         </span>
                     </ul>

@@ -11,7 +11,6 @@ import axios from 'axios';
 function EmailViewerModal({ selectedEmailData, closeModal }) {
 
   const [emailData, setEmailData] = useState(null);  // 선택한 이메일 데이터 저장
-  console.log("모달에 전달된 selectedEmailData:", selectedEmailData); // 전달된 데이터 확인
 
   // 🟢 모달 배경 클릭 시 창 닫기
   const handleBackgroundClick = (e) => {
@@ -37,7 +36,6 @@ function EmailViewerModal({ selectedEmailData, closeModal }) {
       fetchEmailDetail();
     }
   }, [selectedEmailData]);
-  console.log("선택한 이메일의 데이터:", emailData);
 
   //로그인한 계정의 이메일 / 이름을 가져와서 보낸사람에 넣기위함
   const senderEmail = localStorage.getItem('employeeEmail');

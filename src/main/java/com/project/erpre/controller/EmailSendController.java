@@ -29,7 +29,7 @@ import com.project.erpre.service.EmailSendService.InvalidEmailAddressException;
 public class EmailSendController {
 
     @Autowired
-    private EmailSendService emailService;
+    private EmailSendService emailSendService;
 
     // 이메일 전송
     @PostMapping("/send")
@@ -42,8 +42,8 @@ public class EmailSendController {
             @RequestParam(value = "files", required = false) List<MultipartFile> files) { // 첨부파일 목록
 
         try {
-            // EmailService를 호출하여 이메일을 전송하고, 결과 반환
-            EmailSend emailSend = emailService.sendEmail(to, subject, text, from, emailIds, files);
+            // emailSendService를 호출하여 이메일을 전송하고, 결과 반환
+            EmailSend emailSend = emailSendService.sendEmail(to, subject, text, from, emailIds, files);
             return ResponseEntity.ok(emailSend);
         } catch (InvalidEmailAddressException e) {
             return ResponseEntity.badRequest().body("이메일 주소 형식이 잘못되었습니다.");
@@ -56,14 +56,14 @@ public class EmailSendController {
     // 보낸메일 내역
     @GetMapping("/sent/{employeeId}")
     public List<EmailSend> getEmailSends(@PathVariable String employeeId) {
-        return emailService.getEmailSendByEmployeeId(employeeId);
+        return emailSendService.getEmailSendByEmployeeId(employeeId);
     }
 
     // 이메일 뷰어
     @GetMapping("/read/{emailNmS}")
     public ResponseEntity<?> getEmailSends(@PathVariable Integer emailNmS) {
         System.out.println("API호출: /read/" + emailNmS); // 로그
-        EmailSend email = emailService.findEmailById(emailNmS); // emailNmS에 해당하는 이메일을 검색함
+        EmailSend email = emailSendService.findEmailById(emailNmS); // emailNmS에 해당하는 이메일을 검색함
         if (email != null) {
             System.out.println("이메일 ID:" + emailNmS + "에 대한 이메일이 정상적으로 조회되었습니다.");
             return ResponseEntity.ok(email); // 있으면 반환
@@ -78,7 +78,7 @@ public class EmailSendController {
     // 이메일 뷰어 첨부파일 목록
     @GetMapping("files/list/{emailFileNmS}")
     public ResponseEntity<List<EmailFileSend>> getEmailFiles(@PathVariable Integer emailFileNmS) {
-        List<EmailFileSend> files = emailService.getFilesByEmailId(emailFileNmS);
+        List<EmailFileSend> files = emailSendService.getFilesByEmailId(emailFileNmS);
         return ResponseEntity.ok(files);
     }
 
@@ -87,7 +87,7 @@ public class EmailSendController {
     // public ResponseEntity<Resource> downloadFile(@PathVariable Integer emailFileNmS) { // 파일을 다운로드해야되기에 HTTP응답으로 반환 위해
     //                                                                                    // Resource객체 사용
     //     try {
-    //         EmailFileSend fileSend = emailService.getSendFileById(emailFileNmS); // 첨부파일번호로 해당 파일을 조회
+    //         EmailFileSend fileSend = emailSendService.getSendFileById(emailFileNmS); // 첨부파일번호로 해당 파일을 조회
     //         FileSystemResource fileResource = new FileSystemResource(fileSend.getEmailFileUrlS()); // FileSystmeResource는
     //                                                                                                // 파일시스템에서 파일을 읽음 //
     //                                                                                                // 파일경로가져옴
