@@ -111,19 +111,19 @@ public class MessengerService {
     }
 
     // 유저 정보 업데이트 (상태 메시지, 핸드폰 번호, 상태 등)
-    public void updateInfo(Map<String, String> updates) {
+    public void updateInfo(Map<String, String> requests) {
         String employeeId = getEmployeeIdFromAuthentication();
         Employee employee = employeeRepository.findByEmployeeId(employeeId)
                .orElseThrow(() -> new RuntimeException("해당 직원을 찾을 수 없습니다"));
 
-        if (updates.containsKey("employeeTel")) {
-            employee.setEmployeeTel(updates.get("employeeTel"));
+        if (requests.containsKey("employeeTel")) {
+            employee.setEmployeeTel(requests.get("employeeTel"));
         }
-        if (updates.containsKey("employeeStatus")) {
-            employee.setEmployeeStatus(updates.get("employeeStatus"));
+        if (requests.containsKey("employeeStatus")) {
+            employee.setEmployeeStatus(requests.get("employeeStatus"));
         }
-        if (updates.containsKey("employeeStatusMessage")) {
-            employee.setEmployeeStatusMessage(updates.get("employeeStatusMessage"));
+        if (requests.containsKey("employeeStatusMessage")) {
+            employee.setEmployeeStatusMessage(requests.get("employeeStatusMessage"));
         }
 
         employeeRepository.save(employee);

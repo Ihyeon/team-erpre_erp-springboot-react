@@ -1,5 +1,7 @@
 package com.project.erpre.controller;
 
+import com.project.erpre.event.StatusMessageUpdateEvent;
+import com.project.erpre.event.StatusUpdateEvent;
 import com.project.erpre.model.dto.*;
 import com.project.erpre.model.entity.ChatFile;
 import com.project.erpre.model.entity.ChatParticipant;
@@ -9,6 +11,7 @@ import com.project.erpre.service.MessengerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -35,12 +38,14 @@ public class MessengerController {
     private final MessengerService messengerService;
     private final EmployeeService employeeService;
     private final FileService fileService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    public MessengerController(MessengerService messengerService, EmployeeService employeeService, FileService fileService) {
+    public MessengerController(MessengerService messengerService, EmployeeService employeeService, FileService fileService, ApplicationEventPublisher eventPublisher) {
         this.messengerService = messengerService;
         this.employeeService = employeeService;
         this.fileService = fileService;
+        this.eventPublisher = eventPublisher;
     }
 
     /////////////////////////////////////////////////////////////////////// 🟢 공통
@@ -97,8 +102,18 @@ public class MessengerController {
 
     // 유저 정보 업데이트 API (상태 메시지, 핸드폰 번호, 상태 등)
     @PutMapping("/info/update")
-    public ResponseEntity<Void> updateInfo(@RequestBody Map<String, String> updates) {
-        messengerService.updateInfo(updates);
+    public ResponseEntity<?> updateInfo(@RequestBody Map<String, String> requests) {
+        messengerService.updateInfo(requests);
+
+        if (requests.containsKey("employeeStatus")) {
+            logger.info("상태 업데이트 이벤트 발생");
+            eventPublisher.publishEvent(new StatusUpdateEvent(this, requests.get("employeeStatus")));  // 상태 업데이트 이벤트
+        }
+        if (requests.containsKey("employeeStatusMessage")) {
+            logger.info("상태 메시지 업데이트 이벤트 발생");
+            eventPublisher.publishEvent(new StatusMessageUpdateEvent(this, requests.get("employeeStatusMessage")));  // 상태 메시지 업데이트 이벤트
+        }
+
         return ResponseEntity.noContent().build();
     }
 

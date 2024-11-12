@@ -26,6 +26,7 @@ export const useMessengerHooks = () => {
     // ⭐ 로딩 관리 state
     const [isLoading, setIsLoading] = useState(true);
 
+
     // 🔵 유저 관리 state (online, offline, eating, meeting, working, absent)
     const [status, setStatus] = useState('offline')
 

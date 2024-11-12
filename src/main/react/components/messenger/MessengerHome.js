@@ -10,6 +10,9 @@ import {MdMeetingRoom, MdWork} from "react-icons/md";
 import {PiOfficeChairFill} from "react-icons/pi";
 import InfoDetailModal from "./InfoDetailModal";
 import NewNoteModal from "./NewNoteModal";
+import SockJS from "sockjs-client";
+import {Stomp} from "@stomp/stompjs";
+import {useMessengerHooks} from "./useMessengerHooks";
 
 // Option 컴포넌트
 const Option = (props) => {
@@ -42,14 +45,14 @@ const userIcon = [
 ];
 
 
-const MessengerHome = ({ homeSearchKeyword }) => {
+const MessengerHome = ({homeSearchKeyword}) => {
 
     const [isNewNoteModalOpen, setNewNoteModalOpen] = useState(false);
     const {user, setUser} = useContext(UserContext);
     const [searchKeyword, setSearchKeyword] = useState(homeSearchKeyword);
     const [expandedKeys, setExpandedKeys] = useState([]);
-    const [treeData, setTreeData] = useState([]);``
-    const [contextMenu, setContextMenu] = useState({ visible: false,  x: 0,  y: 0,  node: null });
+    const [treeData, setTreeData] = useState([]);
+    const [contextMenu, setContextMenu] = useState({visible: false, x: 0, y: 0, node: null});
     const [selectedEmployees, setSelectedEmployees] = useState([]); // 선택된 직원 정보 저장
 
     const openNewNoteModal = () => {
@@ -62,7 +65,7 @@ const MessengerHome = ({ homeSearchKeyword }) => {
 
     // 메뉴 관련 state
     const [menuVisible, setMenuVisible] = useState(false);
-    const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+    const [menuPosition, setMenuPosition] = useState({x: 0, y: 0});
 
     // 우클릭 핸들러
     const handleRightClick = (info) => {
@@ -91,7 +94,7 @@ const MessengerHome = ({ homeSearchKeyword }) => {
             adjustedY = windowHeight - menuHeight - 10;
         }
 
-        setMenuPosition({ x: adjustedX, y: adjustedY });
+        setMenuPosition({x: adjustedX, y: adjustedY});
         setMenuVisible(true);
 
         // 우클릭한 직원의 정보만 selectedEmployees에 담기
@@ -129,17 +132,118 @@ const MessengerHome = ({ homeSearchKeyword }) => {
     };
 
 
-    const { data: employeeData } = useSearch('/api/messengers/organization', searchKeyword);
+    const {data: employeeData} = useSearch('/api/messengers/organization', searchKeyword);
 
-    // 상태별 아이콘 가져오기 함수
+// 상태별 아이콘 가져오기 함수
     const getStatusIcon = (status) => {
         const iconObj = userIcon.find((icon) => icon.value === status);
         return iconObj ? (
-            <span style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      {iconObj.icon}
-    </span>
+            <span style={{
+                width: "20px",
+                height: "20px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+            }}>
+            {iconObj.icon}
+        </span>
         ) : null;
     };
+
+
+    // 트리 데이터를 새로운 상태로 업데이트하는 함수
+    const updateTreeWithLoginStatus = (treeData, onlineUsers) => {
+        return treeData.map((node) => {
+            if (node.children) {
+                return {
+                    ...node,
+                    children: updateTreeWithLoginStatus(node.children, onlineUsers),
+                };
+            }
+            const isOnline = onlineUsers.includes(node.key);
+            return {
+                ...node,
+                title: (
+                    <div style={{display: 'flex', alignItems: 'center'}}>
+                        {getStatusIcon(isOnline ? 'online' : 'offline')}
+                        <span style={{marginLeft: '5px'}}>{node.title.props.children[1].props.children}</span>
+                    </div>
+                ),
+            };
+        });
+    };
+
+
+    // 트리 데이터를 새로운 상태로 업데이트하는 함수
+    const updateTreeWithNewStatus = (treeData, statusUpdate) => {
+        const {employeeId, newStatus} = statusUpdate;
+
+        // 트리 노드를 업데이트하는 재귀 함수
+        const updateNodeStatus = (nodes) => {
+            return nodes.map(node => {
+                if (node.key === employeeId) {
+                    // 해당 직원의 상태를 업데이트
+                    return {
+                        ...node,
+                        title: (
+                            <div style={{display: "flex", alignItems: "center"}}>
+                                {getStatusIcon(newStatus)} {/* 상태에 맞는 아이콘 */}
+                                <span style={{marginLeft: "5px"}}>{node.title.props.children[1].props.children}</span>
+                            </div>
+                        )
+                    };
+                } else if (node.children) {
+                    // 자식 노드가 있는 경우, 재귀적으로 탐색하여 상태 업데이트
+                    return {
+                        ...node,
+                        children: updateNodeStatus(node.children),
+                    };
+                }
+                return node;
+            });
+        };
+
+        return updateNodeStatus(treeData);
+    };
+
+    // 웹소켓 연결
+    useEffect(() => {
+        const socket = new SockJS('http://localhost:8787/talk');
+        const stompClient = Stomp.over(socket);
+
+        stompClient.connect(
+            {},
+            () => {
+                console.log("WebSocket 연결 성공");
+
+                // 상태 업데이트 구독 - /topic/status
+                stompClient.subscribe('/topic/status', (statusResponse) => {
+                    const statusUpdate = JSON.parse(statusResponse.body);
+                    setTreeData((prevData) => updateTreeWithNewStatus(prevData, statusUpdate));
+                    console.log("상태 업데이트:", statusUpdate);
+                });
+
+                // 상태 메시지 업데이트 구독 - /topic/statusMessage
+                stompClient.subscribe('/topic/statusMessage', (statusMessageResponse) => {
+                    const statusMessageUpdate = statusMessageResponse.body;
+                    console.log("상태 메시지 업데이트:", statusMessageUpdate);
+                });
+
+            },
+            (error) => {
+                console.log("WebSocket 연결 오류:", error);
+            }
+        );
+
+        stompClient.reconnectDelay = 10000;
+        stompClient.activate();
+
+        return () => {
+            stompClient.deactivate()
+                .then(() => console.log("WebSocket 연결 해제 성공"))
+                .catch((error) => console.log("WebSocket 해제 오류", error));
+        };
+    }, []);
 
     // React-Select 커스텀 스타일
     const customStyles = {
@@ -220,8 +324,15 @@ const MessengerHome = ({ homeSearchKeyword }) => {
         }));
 
         try {
-            await axios.put('/api/messengers/info/update', { employeeStatus: newStatus });
+            // 상태를 업데이트하고 서버에 전송
+            await axios.put('/api/messengers/info/update', {employeeStatus: newStatus});
             window.showToast("상태가 변경되었습니다");
+
+            // 상태가 변경되었으므로, WebSocket을 통해 이 정보를 실시간으로 반영하도록 처리
+            stompClient.send('/app/status', {}, JSON.stringify({
+                employeeId: user.employeeId,
+                newStatus
+            }));
 
             setSearchKeyword((prevKeyword) => prevKeyword + " ");
         } catch (error) {
@@ -422,7 +533,7 @@ const MessengerHome = ({ homeSearchKeyword }) => {
                 treeData={treeData}
                 expandedKeys={expandedKeys}
                 onExpand={(keys) => setExpandedKeys(keys)}
-                checkable
+                // checkable
                 showIcon={false}
                 showLine={true}
                 onCheck={handleCheck}
@@ -442,22 +553,22 @@ const MessengerHome = ({ homeSearchKeyword }) => {
                         zIndex: 10000,
                     }}
                 >
-                    <ul style={{ margin: 0, padding: 0, listStyleType: 'none' }}>
+                    <ul style={{margin: 0, padding: 0, listStyleType: 'none'}}>
                         <li
                             onClick={() => handleMenuClick('viewDetail')}
-                            style={{ padding: '4px 8px', cursor: 'pointer' }}
+                            style={{padding: '4px 8px', cursor: 'pointer'}}
                         >
                             상세정보
                         </li>
                         <li
                             onClick={() => handleMenuClick('sendMessage')}
-                            style={{ padding: '4px 8px', cursor: 'pointer' }}
+                            style={{padding: '4px 8px', cursor: 'pointer'}}
                         >
                             쪽지보내기
                         </li>
                         <li
                             onClick={() => handleMenuClick('startChat')}
-                            style={{ padding: '4px 8px', cursor: 'pointer' }}
+                            style={{padding: '4px 8px', cursor: 'pointer'}}
                         >
                             채팅하기
                         </li>
