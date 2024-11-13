@@ -1,4 +1,4 @@
-// src/main/react/components/common/EmailReadModal.js
+// src/main/react/components/common/EmailSendModal.js
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter } from "react-router-dom";
 import ReactDOM from 'react-dom/client';
@@ -8,15 +8,30 @@ import Layout from "../../layout/Layout";
 import axios from 'axios';
 
 
-function EmailViewerModal({ selectedEmailData, closeModal }) {
+function EmailSendModal({ selectedEmailData, closeModal }) {
 
   const [emailData, setEmailData] = useState(null);  // 선택한 이메일 데이터 저장
 
   // 🟢 모달 배경 클릭 시 창 닫기
   const handleBackgroundClick = (e) => {
-    if (e.target.className === 'modal_overlay') {
-      closeModal();
+    if (e.target.id === 'modalOverlay') {
+      handleClose();
     }
+  };
+
+  useEffect(() => {
+    const modal = document.getElementById('modalOverlay');
+    modal.classList.add('fade-in'); // 모달 열릴 때 fade-in 클래스 추가
+  }, []);
+
+  const handleClose = () => {
+    const modal = document.getElementById('modalOverlay');
+    modal.classList.remove('fade-in');
+    modal.classList.add('fade-out'); // 모달 닫을 때 fade-out 클래스 추가
+
+    setTimeout(() => {
+      closeModal(); // 페이드아웃 애니메이션이 끝난 후 모달 닫기
+    }, 300); // CSS 애니메이션과 같은 0.3초로 설정
   };
 
   // 첨부된 파일 이름 + 용량
@@ -71,7 +86,7 @@ function EmailViewerModal({ selectedEmailData, closeModal }) {
   };
 
   return (
-    <div className='modal_overlay' onMouseDown={handleBackgroundClick}>
+    <div id="modalOverlay" className='modal_overlay' onMouseDown={handleBackgroundClick}>
       <div className="email-viewer-container email_modal">
 
         <div className="email-actions">
@@ -79,7 +94,7 @@ function EmailViewerModal({ selectedEmailData, closeModal }) {
           <a href="#" className="action-link">전달</a> */}
           <a href="#" className="action-link delete">삭제</a>
 
-          <button className="btn_close" onClick={closeModal}><i className="bi bi-x-lg"></i></button> {/* 모달 닫기 버튼 */}
+          <button className="btn_close" onClick={handleClose}><i className="bi bi-x-lg"></i></button> {/* 모달 닫기 버튼 */}
         </div>
 
         <h1 className="email-subject">{emailData?.emailSubjectS || '제목 없음'}</h1>
@@ -133,4 +148,4 @@ function EmailViewerModal({ selectedEmailData, closeModal }) {
   );
 }
 
-export default EmailViewerModal;
+export default EmailSendModal;

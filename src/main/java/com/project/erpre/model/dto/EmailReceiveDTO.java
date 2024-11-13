@@ -22,6 +22,9 @@ public class EmailReceiveDTO {
     private Timestamp emailDateR;
     private String emailStatusR;  // 이메일 상태 (nr, r, nd, d) 기본값 'nr'
     private String employeeEmail;
+    private long uid;
 
     private List<EmailFileReceiveDTO> receivedEmailFiles;  // 수신 첨부파일 리스트
+
+
 }
