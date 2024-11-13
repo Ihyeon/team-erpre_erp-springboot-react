@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.project.erpre.model.dto.EmailReceiveDTO;
+import com.project.erpre.model.entity.EmailFileReceive;
 import com.project.erpre.model.entity.EmailReceive;
 import com.project.erpre.repository.EmailReceiveRepository;
 import com.project.erpre.service.EmailReceiveService;
@@ -28,32 +29,28 @@ public class EmailReceiveController {
   @Autowired
   private EmailReceiveRepository emailReceiveRepository;
 
+  // 받은메일 내역
   @GetMapping("/receive/{employeeEmail}")
   public List<EmailReceiveDTO> getEmailsDirectlyFromIMAP(@RequestParam String username,
       @RequestParam String password, @PathVariable String employeeEmail) {
     return emailReceiveService.fetchEmailsFromIMAP(employeeEmail);
-
-    // // 받은메일 Gmail IMAP 서버에서 받아와서 DB 저장
-    // @GetMapping("/receive/{employeeId}")
-    // public void receiveEmails(@RequestParam String username, @RequestParam String
-    // password,
-    // @PathVariable String employeeId) {
-    // emailReceiveService.fetchAndSaveEmails(username, password, employeeId);
-    // }
-
-    // 받은메일 출력
-    // @GetMapping("/receive/view/{employeeId}")
-    // public ResponseEntity<List<EmailReceiveDTO>> getAllReceivedEmails() {
-    // List<EmailReceive> emails = emailReceiveRepository.findAll();
-    // List<EmailReceiveDTO> emailDTOs = emails.stream()
-    // .map(EmailReceiveDTO::new) // 엔티티에서 DTO로 매핑
-    // .collect(Collectors.toList());
-    // return ResponseEntity.ok(emailDTOs);
-    // }
-
-    // @GetMapping("/receive/read/{employeeId}")
-    // public List<EmailReceive> getEmailReceives(@PathVariable String employeeId) {
-    // return emailReceiveService.getEmailReceiveByEmployeeId(employeeId);
-    // }
   }
+
+  // 이메일 뷰어 모달
+  @GetMapping("/receive/read/{uid}")
+  public EmailReceiveDTO getReceivedEmailDetail(
+    @RequestParam String username,
+    @RequestParam String password,
+    @RequestParam String employeeEmail,
+    @PathVariable long uid
+    ) {
+    return emailReceiveService.getReceivedEmailDetail(employeeEmail, uid);
+  }
+
+  // 첨부파일정보
+  @GetMapping("/receive/files/list/{emailNmR}")
+  public List<EmailFileReceive> getReceivedEmailFiles(@PathVariable Integer emailNmR) {
+    return emailReceiveService.getReceivedEmailFiles(emailNmR);
+  }
+
 }

@@ -59,7 +59,7 @@ public class EmailSendController {
         return emailSendService.getEmailSendByEmployeeId(employeeId);
     }
 
-    // 이메일 뷰어
+    // 이메일 뷰어 모달
     @GetMapping("/read/{emailNmS}")
     public ResponseEntity<?> getEmailSends(@PathVariable Integer emailNmS) {
         System.out.println("API호출: /read/" + emailNmS); // 로그

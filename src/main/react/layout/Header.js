@@ -34,7 +34,7 @@ function Header() {
     };
 
     const handleEmailClick = () => {
-        window.location.href = '/receivedMail';
+        window.location.href = '/sentMail';
     }
 
     // 전역 웹소켓 연결 설정 (SockJS와 Stomp)

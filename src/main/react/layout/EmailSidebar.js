@@ -112,16 +112,15 @@ function EmailSidebar({ currentMenu }) {
                         <i className="bi bi-mailbox2-flag icon-margin"></i>메일함
                     </span>
                     <ul className="submenu">
-                        <li className={currentMenu === 'receivedMail' ? 'active' : ''}>
-                            <a href="#" onClick={() => handleSubMenuClick('receivedMail', '/receivedMail')}>받은 메일함</a>
-                        </li>
                         <li className={currentMenu === 'sentMail' ? 'active' : ''}>
                             <a href="#"
                                 onClick={() => handleSubMenuClick('sentMail', '/sentMail')}>
                                 보낸 메일함
                             </a>
                         </li>
-
+                        <li className={currentMenu === 'receivedMail' ? 'active' : ''}>
+                            <a href="#" onClick={() => handleSubMenuClick('receivedMail', '/receivedMail')}>받은 메일함</a>
+                        </li>
                     </ul>
                 </li>
                 <li>

@@ -6,7 +6,7 @@ import Layout from "../../layout/Layout";
 import Pagination from '../common/Pagination';
 import axios from 'axios';
 import { useNavigate } from "react-router-dom"; // useNavigate import
-import EmailViewerModal from '../common/EmailViewerModal'; //모달 뷰어 임포트
+import EmailSendModal from '../common/EmailSendModal'; //모달 뷰어 임포트
 
 
 function SentMail() {
@@ -23,12 +23,16 @@ function SentMail() {
     const fetchSentEmail = async () => {
       try {
         const response = await axios.get(`/api/email/sent/${employeeId}`);
+
+        const sortedData = response.data.sort((a, b) => new Date(b.emailDateS) - new Date(a.emailDateS));
+
         setSendData(response.data);
         setLoading(false); // 로딩 완료 후 false로 설정
       } catch (error) {
         console.error('보낸메일을 불러오지 못하였습니다.', error);
       }
     };
+    
     if (employeeId) {
       fetchSentEmail();
     }
@@ -44,7 +48,7 @@ function SentMail() {
   // 🟡 모달 열기
   const openModal = (emailData) => {
     setSelectedEmail(emailData);
-    console.log("sentMail에서 선택된 이메일 데이터:", emailData); // 선택된 이메일 데이터 확인
+    console.log("보낸메일함에서 선택된 이메일 데이터:", emailData); // 선택된 이메일 데이터 확인
     setShowModal(true);
   };
 
@@ -62,14 +66,14 @@ function SentMail() {
         </div>
 
         {/* 검색어 입력 */}
-        <div className="mail-search search_box">
+        {/* <div className="mail-search search_box">
           <label className="label_floating">메일 검색</label>
           <i className="bi bi-search"></i>
           <input type="text" className="mail-search-box box search" />
           <button className="btn-del">
             <i className="bi bi-x"></i>
           </button>
-        </div>
+        </div> */}
         <div className="menu_content">
           <div className="search_wrap">
             <div className="left">
@@ -79,7 +83,7 @@ function SentMail() {
             </div>
           </div>
           <div className="table_wrap">
-            <table>
+            <table className='table_border'>
               <thead>
                 <tr>
                   <th>
@@ -88,30 +92,30 @@ function SentMail() {
                       <i className="chkbox_icon">
                         <i className="bi bi-check-lg"></i>
                       </i>
-                    </label>
+                    </label> 
                   </th>
                   <th>
                     <div className="order_wrap">
-                      <span>받는 사람</span>
-                      <button className="btn_order">
+                      <span>이메일</span>
+                      {/* <button className="btn_order">
                         <i className="bi bi-arrow-up"></i>
-                      </button>
+                      </button> */}
                     </div>
                   </th>
                   <th>
                     <div className="order_wrap">
                       <span>제목</span>
-                      <button className="btn_order">
+                      {/* <button className="btn_order">
                         <i className="bi bi-arrow-up"></i>
-                      </button>
+                      </button> */}
                     </div>
                   </th>
                   <th>
                     <div className="order_wrap">
                       <span>일자</span>
-                      <button className="btn_order">
+                      {/* <button className="btn_order">
                         <i className="bi bi-arrow-up"></i>
-                      </button>
+                      </button> */}
                     </div>
                   </th>
 
@@ -153,13 +157,13 @@ function SentMail() {
           </div>
 
           {/* 페이지 네이션 컴포넌트 임포트 */}
-          <Pagination />
+          {/* <Pagination /> */}
 
         </div>
       </main>
       {
         showModal && (
-          <EmailViewerModal
+          <EmailSendModal
             selectedEmailData={selectedEmail} //선택된 이메일 데이터를 모달에 전달
             closeModal={closeModal} // 모달 닫기 함수 전달
           />
