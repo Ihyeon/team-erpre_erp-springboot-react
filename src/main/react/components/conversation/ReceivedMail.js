@@ -17,7 +17,7 @@ function ReceivedMail() {
   const [selectedEmail, setSelectedEmail] = useState('')
   const employeeEmail = localStorage.getItem('employeeEmail');
 
-  // 보낸 메일 저장
+  // 받은 메일 저장
   useEffect(() => {
     const fetchReceiveEmail = async () => {
       try {
@@ -29,9 +29,9 @@ function ReceivedMail() {
           }
         });
 
-        // const sortedData = response.data.sort((a, b) => new Date(b.emailDateR) - new Date(a.emailDateR));  //가장 최근 날짜가 위로 오도록 정렬
+         const sortedData = response.data.sort((a, b) => new Date(b.emailDateR) - new Date(a.emailDateR));  //가장 최근 날짜가 위로 오도록 정렬
 
-        setReceiveData(response.data);
+        setReceiveData(sortedData);
         setLoading(false);
       } catch (error) {
         console.error('받은메일을 불러오지 못하였습니다.', error);

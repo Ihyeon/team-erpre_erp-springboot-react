@@ -16,7 +16,7 @@
 .mail-search .mail-search-box { width: 97% !important } 
 
 /* 보낸메일 행 */
-.send_tr { cursor: pointer; } 
+.trash_tr { cursor: pointer; } 
 
 .menu_title { margin-top: 21px; } 
 
@@ -26,4 +26,4 @@
 
 .checkbox_map { display: inline-block; width: 16px; height: 16px; border: 1px solid #888; border-radius: 4px; background-color: white; position: relative; cursor: pointer; } 
 
-.restore_btn { position: fixed; right: 4.6%; top: 11.5%; font-size: 23px; } 
+.restore_btn { position: fixed; right: 4.6%; top: 10.5%; font-size: 23px; } 
