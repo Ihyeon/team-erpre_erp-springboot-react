@@ -2,6 +2,7 @@ package com.project.erpre.service;
 
 import com.project.erpre.model.dto.EmailReceiveDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -32,11 +33,16 @@ public class EmailReceiveService {
     @Autowired
     private EmailReceiveFileRepository emailReceiveFileRepository;
 
+    @Value("${mail.imap.username}")
+    private String imapUsername;
+
+    @Value("${mail.imap.password}")
+    private String imapPassword;
+
+
+
     private static final String HOST = "imap.gmail.com"; // Gmail IMAP 서버와 통신할 수 있게함
     private static final String MAIL_STORE_TYPE = "imap"; // IMAP 프로토콜 사용을 지정함
-
-    private static final String MAIN_USERNAME = "hojinkim001155@gmail.com";
-    private static final String MAIN_PASSWORD = "icsw xsat ynhm aeqp";
 
     public List<EmailReceiveDTO> fetchEmailsFromIMAP(String employeeEmail) {
         Properties properties = new Properties(); // Gmail IMAP 서버에 연결하는데 필요한 설정들
@@ -49,10 +55,10 @@ public class EmailReceiveService {
         List<EmailReceiveDTO> emails = new ArrayList<>();
 
         try {
-            System.out.println("메일을 가져오기위한 로그인계정: " + MAIN_USERNAME);
+            System.out.println("메일 서버에 연결합니다.");
             Session emailSession = Session.getDefaultInstance(properties); // 세션 생성
             Store store = emailSession.getStore(MAIL_STORE_TYPE); // IMAP 스토어 객체 생성해 IMAP 서버에 연결함
-            store.connect(MAIN_USERNAME, MAIN_PASSWORD);// 사용자이름과 비번
+            store.connect(imapUsername, imapPassword);// 사용자이름과 비번
             System.out.println("수신메일을 위한 계정이 성공적으로 연결되었습니다.");
 
             try {
@@ -88,8 +94,8 @@ public class EmailReceiveService {
                 for (Address address : recipients) {
                     if (address instanceof InternetAddress) {
                         String recipientEmail = ((InternetAddress) address).getAddress();
-                        System.out.println("수신자 이메일: " + recipientEmail);
-                        System.out.println("로그인직원 이메일: " + employeeEmail);
+                        // System.out.println("수신자 이메일: " + recipientEmail);
+                        // System.out.println("로그인직원 이메일: " + employeeEmail);
                         if (recipientEmail != null && recipientEmail.equalsIgnoreCase(employeeEmail)) {
                             long uid = uidFolder.getUID(message);
                             EmailReceiveDTO emailDTO = convertMessageToDTO(message, employeeEmail, uid);
@@ -101,7 +107,14 @@ public class EmailReceiveService {
             }
             emailFolder.close(false); // 폴더와 스토어 닫기
             store.close();
+        } catch (MessagingException e) {
+            System.err.println("메일 서버 연결 중 오류 발생:");
+            e.printStackTrace();
+        } catch (IOException e) {
+            System.err.println("메일 처리 중 IO 오류 발생:");
+            e.printStackTrace();
         } catch (Exception e) {
+            System.err.println("알 수 없는 오류 발생:");
             e.printStackTrace();
         }
         return emails;
@@ -165,7 +178,7 @@ public class EmailReceiveService {
         try {
             Session emailSession = Session.getDefaultInstance(properties);
             Store store = emailSession.getStore(MAIL_STORE_TYPE);
-            store.connect(MAIN_USERNAME, MAIN_PASSWORD);
+            store.connect(imapUsername, imapPassword);
 
             Folder emailFolder = store.getFolder("[Gmail]/전체보관함");
             emailFolder.open(Folder.READ_ONLY);

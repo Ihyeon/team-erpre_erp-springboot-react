@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter } from "react-router-dom";
 import ReactDOM from 'react-dom/client';
-import '../../../resources/static/css/conversation/ReceivedMail.css'
+import '../../../resources/static/css/conversation/ReceivedMail.css';
 import Layout from "../../layout/Layout";
 import Pagination from '../common/Pagination';
 import axios from 'axios';
@@ -21,27 +21,23 @@ function ReceivedMail() {
   useEffect(() => {
     const fetchReceiveEmail = async () => {
       try {
-        console.log("employeeEmail:", employeeEmail);  // employeeId 값 출력
-        const response = await axios.get(`/api/email/receive/${employeeEmail}`, {
-          params: {
-            username: 'hojinkim001155@gmail.com',
-            password: 'icsw xsat ynhm aeqp'
-          }
-        });
-
-         const sortedData = response.data.sort((a, b) => new Date(b.emailDateR) - new Date(a.emailDateR));  //가장 최근 날짜가 위로 오도록 정렬
+        //console.log("employeeEmail:", employeeEmail);  // employeeId 값 출력
+        const response = await axios.get(`/api/email/receive/${employeeEmail}`);
+        
+        const sortedData = response.data.sort((a, b) => new Date(b.emailDateR) - new Date(a.emailDateR));  //가장 최근 날짜가 위로 오도록 정렬
 
         setReceiveData(sortedData);
         setLoading(false);
       } catch (error) {
         console.error('받은메일을 불러오지 못하였습니다.', error);
+        setLoading(false); // 에러 발생 시 로딩 상태 해제
       }
     };
     if (employeeEmail) {
       fetchReceiveEmail();
     }
   }, [employeeEmail]);
-  console.log(receiveData); // 보낸 메일 내역
+  // console.log(receiveData); // 보낸 메일 내역
 
 
   //모달 관련 hooks
@@ -88,14 +84,14 @@ function ReceivedMail() {
             <table className='table_border'>
               <thead>
                 <tr>
-                 <th>
+                  <th>
                     <label className="chkbox_label">
                       <input type="checkbox" className="chkbox" />
                       {/* <i className="chkbox_icon">
                         <i className="bi bi-check-lg"></i>
                       </i> */}
-                    </label> 
-                  </th> 
+                    </label>
+                  </th>
                   <th>
                     <div className="order_wrap">
                       <span>이메일</span>
