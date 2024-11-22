@@ -31,19 +31,15 @@ public class EmailReceiveController {
 
   // 받은메일 내역
   @GetMapping("/receive/{employeeEmail}")
-  public List<EmailReceiveDTO> getEmailsDirectlyFromIMAP(@RequestParam String username,
-      @RequestParam String password, @PathVariable String employeeEmail) {
+  public List<EmailReceiveDTO> getEmailsDirectlyFromIMAP(@PathVariable String employeeEmail) {
     return emailReceiveService.fetchEmailsFromIMAP(employeeEmail);
   }
 
   // 이메일 뷰어 모달
   @GetMapping("/receive/read/{uid}")
   public EmailReceiveDTO getReceivedEmailDetail(
-    @RequestParam String username,
-    @RequestParam String password,
     @RequestParam String employeeEmail,
-    @PathVariable long uid
-    ) {
+    @PathVariable long uid) {
     return emailReceiveService.getReceivedEmailDetail(employeeEmail, uid);
   }
 

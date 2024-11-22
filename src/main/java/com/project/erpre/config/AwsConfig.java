@@ -7,7 +7,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @Configuration
-public class AwsConfig { //AWS S3 설정파일 key 갑 안올라가게 설정
+public class AwsConfig { //AWS S3 설정파일 key 안올라가게 설정
 
 //    @Bean
 //    public S3Client s3Client() {
