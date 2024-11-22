@@ -4,7 +4,7 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import {FaRegPlusSquare} from "react-icons/fa";
 import EmployeeSearchModal from "./EmployeeSearchModal";
-import UseSearch from "./UseSearch";
+import UseSearch from "./useSearch";
 import { UserContext} from "../../context/UserContext";
 import { CustomToolbar } from "./CustomToolbar";
 import axios from "axios";
