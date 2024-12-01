@@ -1,7 +1,5 @@
 package com.project.erpre.controller;
 
-import com.project.erpre.event.StatusMessageUpdateEvent;
-import com.project.erpre.event.StatusUpdateEvent;
 import com.project.erpre.model.dto.*;
 import com.project.erpre.service.EmployeeService;
 import com.project.erpre.service.FileService;
@@ -101,15 +99,6 @@ public class MessengerController {
     @PutMapping("/info/update")
     public ResponseEntity<?> updateInfo(@RequestBody Map<String, String> requests) {
         messengerService.updateInfo(requests);
-
-        if (requests.containsKey("employeeStatus")) {
-            logger.info("상태 업데이트 이벤트 발생");
-            eventPublisher.publishEvent(new StatusUpdateEvent(this, requests.get("employeeStatus")));  // 상태 업데이트 이벤트
-        }
-        if (requests.containsKey("employeeStatusMessage")) {
-            logger.info("상태 메시지 업데이트 이벤트 발생");
-            eventPublisher.publishEvent(new StatusMessageUpdateEvent(this, requests.get("employeeStatusMessage")));  // 상태 메시지 업데이트 이벤트
-        }
 
         return ResponseEntity.noContent().build();
     }

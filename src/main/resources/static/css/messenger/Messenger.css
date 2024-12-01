@@ -19,11 +19,13 @@ h3 { color: black; }
 
 /* 검색창 */
 .search-wrap { margin: 10px 0; padding: 1px 20px 0 19px; display: flex; align-items: center;}
-.messenger-panel .search_box { border-radius: 23px; background-color: #f4f4f478; margin-right: 4px;}
+.messenger-panel .search_box { border-radius: 23px; background-color: #f4f4f478; margin-right: 5px; width: 222px;}
 .messenger-panel .box { background-color: #f4f4f478; border-radius: 23px; }
-.messenger-panel .search_box.has_text input { margin-left: 4px; }
 .messenger-panel .search_box.has_text { border-color: black; }
+.messenger-panel .search_box.has_text input { margin-left: 4px; }
+.messenger-panel .search_box .label_floating { font-size: 15px; }
 .messenger-panel .search_box.has_text .label_floating, .select_box.selected .label_floating { color: black; }
+.messenger-panel .search_box.has_text button { color: black; }
 .messenger-panel .messenger-search .search_box.has_text button i { display: inline; color: black; position: absolute; cursor: pointer; top: 50%; transform: translateY(-50%); }
 
 /* 유저 프로필*/
@@ -32,30 +34,34 @@ h3 { color: black; }
 .messenger-user .info { display: flex; flex-direction: column; margin-left: 5px; padding: 0px 0px 0px 10px;}
 .messenger-user .info-wrapper { display: flex; align-items: center; }
 .messenger-user .user-name { font-size: 18px; font-weight: bold; line-height: 1; margin: 0; width: 100%; }
-
 .messenger-user .profile.status { display: flex; align-items: center; height: 30px; justify-content: flex-end; width: 100%; }
 
+{/* react-select 커스텀 */}
 .status-select-wrapper { display: flex; align-items: center; height: 40px; margin-left: 21px; cursor: pointer; justify-content: space-between; width: auto; padding-right: 0px; justify-content: flex-end; margin-right: 10px; }
-.Select__control { min-height: 40px; height: 40px; }
 .custom-option { display: flex; align-items: center; color: black !important; padding: 3px !important; margin-left: 2px !important; }
-.css-1hqnu8h { padding: 2px 0px 2px 23px !important; overflow: visible !important; }
-.css-1xc3v61-indicatorContainer { padding: 2px !important; }
+.custom-option .label { margin-left: 8px; cursor: pointer;}
 .custom-single-value { display: flex; align-items: center; color: black; }
-.css-qr46ko { padding: 2px !important;}
-
 .messenger-user .status-message { margin-top: 3px; font-size: 15px; width: 100%; word-wrap: break-word; color: black; text-align: left; }
 
 /* 메신저 조직도*/
 .messenger-content { padding: -1px 30px; overflow-y: auto; height: calc(100% - 120px); color: black; font-size: 16px; overflow-x: hidden; }
+.org-tree-root { font-weight: bold; display: flex; align-items: center; }
+.org-status-message { color: rgb(142 141 148); font-size: 14px; margin-left: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; line-height: normal;}
+.org-status-wrap { display: flex; align-items: center; }
+.org-status-icon { display: flex; align-items: center; }
+.org-department-title { font-weight: bold; }
+.valid-status-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
 .rc-tree { padding: 9px 10px 10px 20px; }
 .rc-tree-list-holder-inner { font-size: 16px; }
 .rc-tree .rc-tree-treenode { padding: 2px 0 !important; }
 .rc-tree .rc-tree-title { margin-left: 3px; align-items: center; font-size: 16px; display: flex; line-height: 1.6; min-height: 26px;}
-.rc-tree .rc-tree-title span { font-size: 16px;  display:inline-block; vertical-align: middle; }
+.rc-tree .rc-tree-title span { vertical-align: middle; display: flex; align-items: center;}
 .rc-tree .parent-icon { font-size: 18px; margin-right: 5px; }
 .rc-tree .rc-tree-title span:first-child { margin-right: 5px; }
 .rc-tree .rc-tree-treenode-checkbox-wrapper { margin-right: 8px; }
+.rc-tree-node-selected { background-color: #9dd0ff7d; box-shadow: 0 0 0 1px #9da8ff; }
 .rc-tree-checkbox { display: none; }
+
 
 /* 커스텀 체크박스 */
 .rc-tree-treenode-checkbox-wrapper::before {
@@ -77,43 +83,19 @@ h3 { color: black; }
 
 /* 조직도 상태 필터 */
 .org-status { display: flex; margin: 10px 0; }
-.org-status button { font-size:23px; padding: 5px 10px; cursor: pointer; border-radius: 5px; transition: background-color 0.3s ease, color 0.3s ease; }
-.org-status button .btn1 { color: #0057a2; }
-.org-status button .btn2 { color: #43B25C; }
-.org-status button .btn3 { color: #6C757D; }
-.org-status button:hover { background-color: #0056b3; color: white; }
-.org-status button:hover path { color: white; }
+.org-status button { margin-left: 10px; font-size: 19px; cursor: pointer; border: 1.5px solid currentColor; padding: 6px; border-radius: 25px; transition: background-color 0.3s ease, color 0.3s ease; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background-color: white;}
+.org-status button.btn1 { color: #0057a2; border-color: #0057a2;}
+.org-status button.btn2 { color: #28A745; border-color: #28A745;}
+.org-status button.btn3 { color: #6C757D; border-color: #6C757D;}
+.org-status button:hover { background-color: rgba(0, 0, 0, 0.05); padding: 6px; width: 34px; height: 34px; border-radius: 25px;}
+.org-status button.btn1:hover { background-color: #0056b3; color: white; }
+.org-status button.btn2:hover { background-color: #28A745; color: white; }
+.org-status button.btn3:hover { background-color: #6C757D; color: white; }
+.org-status button:hover path { color: white; width: 20px; height: 20px;}
+.org-status button svg { width: 34px; height: 34px;  fill: currentColor; }
 
-/* 우클릭 메뉴 */
-.context-menu {
-    position: fixed;
-    z-index: 2000;
-    background: white;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    visibility: visible;
-    white-space: nowrap;
-    color: black;
-    box-sizing: border-box;
-    width: 130px;
-    font-size: 16px;
-}
-
-.context-menu ul {
-    margin: 0;
-    padding: 0;
-    list-style-type: none;
-    display: flex;
-    flex-direction: column;
-}
-
-.context-menu ul li {
-    padding: 8px 12px !important;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-}
-
-.context-menu ul li:hover { background-color: #F4F4F4; }
-
+/* 메신저 홈화면 우클릭 메뉴 */
+.messenger-content .context-menu { position: fixed; z-index: 2000; background: white; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); white-space: nowrap; color: black; box-sizing: border-box; width: 95px; font-size: 16px; }
+.messenger-content .context-menu ul { margin: 0; padding: 0; list-style-type: none; display: flex; flex-direction: column; }
+.messenger-content .context-menu ul li { padding: 4px 8px !important; display: flex; align-items: center; cursor: pointer; }
+.messenger-content .context-menu ul li:hover { background-color: #F4F4F4; }

@@ -1,5 +1,5 @@
 // ✏️
-// 1. 상태 필터링에서 'null' 값으로 디폴트(전체)를 표현할지, 'all' 이라는 명시적인 값을 보내서 판단하게 할지 -> 추후 유지보수가 용이하도록 명시적인 값 사용, default = 'all'
+// 상태 필터링에서 'null' 값으로 디폴트(전체)를 표현할지, 'all' 이라는 명시적인 값을 보내서 판단하게 할지 -> 추후 유지보수가 용이하도록 명시적인 값 사용, default = 'all'
 
 import React, {useContext, useEffect, useRef, useState} from 'react';
 import axios from "axios";
@@ -18,199 +18,219 @@ import useSearch from "./useSearch";
 import {useMessengerHooks} from "./useMessengerHooks";
 import ChatRoomModal from "./ChatRoomModal";
 
-// Option 컴포넌트
-const Option = (props) => {
-    return (<div {...props.innerProps} className="custom-option">
-        {props.data.icon}
-        <span style={{marginLeft: '8px'}}>{props.label}</span>
-    </div>);
-};
-
-// SingleValue 컴포넌트
-const SingleValue = (props) => {
-    return (<div {...props.innerProps} style={{display: 'flex', alignItems: 'center'}}>
-        {props.data.icon}
-        <span style={{marginLeft: '5px', verticalAlign: 'middle', lineHeight: '1'}}>{props.data.label}</span>
-    </div>);
-};
-
-// 유저 상태 아이콘 및 선택 옵션
-const userIcon = [{value: 'online', label: '온라인', icon: <FaUserAlt color="#28a745"/>}, {
-    value: 'offline', label: '오프라인', icon: <FaUserAltSlash color="#6c757d"/>
-}, {value: 'eating', label: '식사중', icon: <FaUtensils color="#ffc107"/>}, {
-    value: 'working', label: '업무중', icon: <MdWork color="#17a2b8"/>
-}, {value: 'meeting', label: '회의중', icon: <MdMeetingRoom color="#007bff"/>}, {
-    value: 'absent', label: '부재중', icon: <PiOfficeChairFill color="#dc3545"/>
-}];
-
-
-// MessengerHome: 조직도와 유저 상태를 관리하는 메신저 홈 컴포넌트
+// MessengerHome.js (Messenger.css)
+// 🟣 유저 상태 관리
+// 🟢 조직도(트리 구조) 렌더링 및 상태 필터링
+// ⚪ 웹소켓을 통한 유저 상태 실시간 업데이트 (온라인 상태 및 상태 메시지)
+// 🟡 우클릭 메뉴의 유저 상세정보, 쪽지, 채팅방 모달 관리
 const MessengerHome = () => {
 
     // Context: 전역 유저 정보 관리
     const {user, setUser} = useContext(UserContext);
-
-    // 상태 관리
+    
+    // 🟡 우클릭 메뉴의 모달 상태 관리
     const [isModalOpen, setModalOpen] = useState({info: false, note: false, chat: false}); // 모달 열림 상태
+
+    // 🟢 조직도 상태 관리
     const [orgStatus, setOrgStatus] = useState(() => { const employeeId = user?.employeeId; return employeeId ? localStorage.getItem(`orgStatus_${employeeId}`) || "all"  : "all";}); // 조직도 상태 필터링 (초기 상태: 로컬에 저장된 값)
     const [searchKeyword, setSearchKeyword] = useState(''); // 검색어 상태
     const [treeData, setTreeData] = useState([]); // 트리 데이터 상태
     const [expandedKeys, setExpandedKeys] = useState([]); // 확장된 트리 키 상태
-    const [selectedEmployees, setSelectedEmployees] = useState([]); // 선택된 직원 상태
-    const [selectedChatNo, setSelectedChatNo] = useState(null); // 선택된 채팅방 번호
-    const [menuVisible, setMenuVisible] = useState(false); // 우클릭 메뉴 표시 상태
-    const [menuPosition, setMenuPosition] = useState({x: 0, y: 0}); // 우클릭 메뉴 위치
+
+    // ⚪ 웹소켓 상태 관리
     const stompClientRef = useRef(null); // WebSocket 클라이언트 레퍼런스
+    
+    // 🟡 우클릭 메뉴 상태 관리
+    const [selectedEmployee, setSelectedEmployee] = useState([]); // 선택된 직원 정보
+    const [selectedChatNo, setSelectedChatNo] = useState(null); // 선택된 채팅방 정보
+    const [contextMenu, setContextMenu] = useState({visible: false, x: 0, y: 0, node: null}); // 우클릭 컨텍스트 메뉴 상태
 
-    // 우클릭 컨텍스트 메뉴 상태
-    const [contextMenu, setContextMenu] = useState({visible: false, x: 0, y: 0, node: null});
-
-    // 모달 열기 및 닫기 함수
-    const openModal = (type) => {
-        setModalOpen(prev => ({...prev, [type]: true}));
+    // 🟣 react-select: 드롭다운 옵션에 아이콘과 라벨을 표시하는 커스텀 컴포넌트
+    const Option = (props) => {
+        return (
+            <div {...props.innerProps} className="custom-option">
+                {props.data.icon} {/* 상태 아이콘 */}
+                <span className="label">{props.label}</span> {/* 상태 라벨 */}
+            </div>
+        );
     };
-    const closeModal = (type) => {
-        setModalOpen(prev => ({...prev, [type]: false}));
+
+    // 🟣 react-select: 선택된 값에 아이콘과 라벨을 표시하는 커스텀 컴포넌트
+    const SingleValue = (props) => {
+        return (
+            <div {...props.innerProps} className="custom-option">
+                {props.data.icon} {/* 상태 아이콘 */}
+                <span className="label">{props.data.label}</span> {/* 상태 라벨 */}
+            </div>
+        );
     };
 
-    // 상태 필터링 버튼 클릭 핸들러
+    // 🟣 유저 상태 옵션 목록
+    const userIcon = [
+        {value: 'online', label: '온라인', icon: <FaUserAlt color="#28A745"/>},
+        {value: 'offline', label: '오프라인', icon: <FaUserAltSlash color="#6c757d"/>},
+        {value: 'eating', label: '식사중', icon: <FaUtensils color="#ffc107"/>},
+        {value: 'working', label: '업무중', icon: <MdWork color="#17a2b8"/>},
+        {value: 'meeting', label: '회의중', icon: <MdMeetingRoom color="#007bff"/>},
+        {value: 'absent', label: '부재중', icon: <PiOfficeChairFill color="#dc3545"/>}
+    ];
+
+    // 🟡 모달 열기 및 닫기 함수
+    const openModal = (type) => { setModalOpen(prev => ({...prev, [type]: true})); };
+    const closeModal = (type) => { setModalOpen(prev => ({...prev, [type]: false})); };
+
+    // 🟢 상태 필터링 버튼 클릭 핸들러
     const statusFilter = () => {
         const nextStatus = { all: "online", online: "offline", offline: "all" };
-        const newStatus = nextStatus[orgStatus];
+        const newStatus = nextStatus[orgStatus]; // orgStatus의 값이 키 중 하나와 일치할 경우, 해당 키의 값을 반환
         setOrgStatus(newStatus);
         localStorage.setItem(`orgStatus_${user.employeeId}`, newStatus);
     };
 
-    // 조직도 상태 선택 옵션
-    const orgStatusOptions = [{value: 'all', label: '전체'}, {value: 'online', label: '접속 중'}, // offline 외의 모든 상태
-    ];
+    // 🟢 공통 검색 훅: 검색 키워드 및 상태 기반으로 조직도 데이터 가져오기
+    const {data: employeeData} = useSearch('/api/messengers/organization', searchKeyword, orgStatus); // 구조 분해 할당시 이름 변경
 
-    // 공통 검색 훅: 검색 키워드 및 상태 기반으로 조직도 데이터 가져오기
-    const {data: employeeData} = useSearch('/api/messengers/organization', searchKeyword, orgStatus);
-
-    // 우클릭 이벤트 핸들러: 컨텍스트 메뉴 표시
+    // 🟡 우클릭 이벤트 핸들러: 컨텍스트 메뉴 표시
     const handleRightClick = (info) => {
-        console.log("우클릭 이벤트 발생:", info);
-        console.log("선택된 직원 아이디", info.node.key);
-        info.event.preventDefault();
-        info.event.stopPropagation();
+        console.log("우클릭 이벤트 동작", info);
+        // console.log("선택된 직원 아이디", info.node.key);
+        info.event.preventDefault(); // 브라우저의 기본 우클릭 메뉴 비활성화
+        info.event.stopPropagation(); // 우클릭 이벤트가 부모 컴포넌트로 전파되지 않도록 차단
+
+        if (!info.node.isLeaf) { return; }
 
         const x = info.event.pageX;
         const y = info.event.pageY;
 
-        const menuWidth = 150;
-        const menuHeight = 100;
+        const menuWidth = 150; // 메뉴의 너비
+        const menuHeight = 100; // 메뉴의 높이
+        const windowWidth = window.innerWidth; // 브라우저 창의 너비
+        const windowHeight = window.innerHeight; // 브라우저 창의 높이
 
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
-
+        // 화면을 벗어나지 않도록 메뉴 위치 조정
         let adjustedX = x;
         let adjustedY = y;
+        if (x + menuWidth > windowWidth) { adjustedX = windowWidth - menuWidth - 10; }
+        if (y + menuHeight > windowHeight) { adjustedY = windowHeight - menuHeight - 10; }
 
-        if (x + menuWidth > windowWidth) {
-            adjustedX = windowWidth - menuWidth - 10;
-        }
-
-        if (y + menuHeight > windowHeight) {
-            adjustedY = windowHeight - menuHeight - 10;
-        }
-
-        setMenuPosition({x: adjustedX, y: adjustedY});
-        setMenuVisible(true);
-
-        // 우클릭한 직원의 정보만 selectedEmployees에 담기
-        setSelectedEmployees([{
-            employeeId: info.node.key, employeeName: info.node.title.props.children[1].props.children[0]
-        }]);
+        setContextMenu( { visible: true, x: adjustedX, y: adjustedY, node: info.node});
+        setSelectedEmployee([{ employeeId: info.node.key, employeeName: info.node.title.props.children[1].props.children[0] }]);
     };
 
-
-    // 메뉴 클릭 핸들러
+    // 🟡 컨텍스트 메뉴 클릭 핸들러
     const handleMenuClick = async (action) => {
-        setMenuVisible(false);
 
-        if (action === 'startChat') {
+        // 메뉴 숨기기
+        setContextMenu((prev) => ({ ...prev, visible: false, x: prev.x, y: prev.y, node: prev.node }));
+
+        if (action === 'viewDetail') {
+            openModal("info");
+        } else if (action === 'sendNote') {
+            openModal("note");
+        } else if (action === 'startChat') {
             try {
-                // 선택된 직원과의 채팅방 생성 요청
-                const response = await axios.post('/api/messengers/chat/create', selectedEmployees.map(emp => emp.employeeId));
-
-
-                console.log('채팅방 데이터:', response.data);
+                const response = await axios.post('/api/messengers/chat/create', selectedEmployee.map(emp => emp.employeeId));
                 const chatNo = response.data.chatNo;
-
-                // 채팅방 번호를 상태에 저장하고 모달 열기
                 setSelectedChatNo(chatNo);
                 openModal("chat");
             } catch (error) {
                 console.error("채팅방 생성 중 오류 발생:", error);
             }
-        } else if (action === 'sendMessage') {
-            openModal("note");
-        } else if (action === 'viewDetail') {
-            openModal("info");
         }
     };
 
-    // 트리 노드 체크 핸들러
-    const handleCheck = (checkedKeys, info) => {
-        // 체크된 직원의 ID와 이름 추출
-        const employees = info.checkedNodes
-            .filter(node => node.isLeaf)
-            .map(node => ({
-                employeeId: node.key, employeeName: node.title.props.children[1].props.children[0]
-            }));
-        setSelectedEmployees(employees);
-    };
-
-
-    // 상태별 아이콘 가져오기 함수
+    // 🟢 상태별 아이콘 가져오기 함수
     const getStatusIcon = (status) => {
-        const validStatus = status || 'offline';
-        const iconObj = userIcon.find((icon) => icon.value === validStatus);
-        return iconObj ? (<span style={{
-            width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center"
-        }}>
-            {iconObj.icon}
-        </span>) : null;
+        const employeeStatus = status || 'offline';
+        const iconObj = userIcon.find((icon) => icon.value === employeeStatus);
+        return iconObj ? (
+            <span className="valid-status-icon">
+                {iconObj.icon}
+            </span>
+        ) : null;
     };
 
+    // 🟢 직원 데이터 기반의 조직도 트리 구조 생성
+    const createOrgTree = (data) => {
+        // 부서 중복 여부 관리
+        const departmentMap = {};
 
-    // 트리 데이터를 새로운 상태로 업데이트하는 함수
-    const updateTreeWithLoginStatus = (treeData, onlineUsers) => {
-        return treeData.map((node) => {
-            if (node.children) {
-                return {
-                    ...node, children: updateTreeWithLoginStatus(node.children, onlineUsers),
-                };
-            }
-            const isOnline = onlineUsers.includes(node.key);
-            return {
-                ...node, title: (<div style={{display: 'flex', alignItems: 'center'}}>
-                    {getStatusIcon(isOnline ? 'online' : 'offline')}
-                    <span style={{marginLeft: '5px'}}>{node.title.props.children[1].props.children}</span>
+        // 최상위 노드(루트 노드) 생성
+        const tree = [{
+            key: "0",
+            title: (
+                <div className="org-tree-root">
+                    Erpre
                 </div>),
+            children: [] // 루트 노드 하위에 추가될 부서 및 직원 노드 저장
+        }];
+
+        // 직원 데이터를 순회하며 부서와 직원 노드 생성
+        data.forEach((employee) => {
+            const departmentName = employee.departmentName;
+
+            // 직원 정보를 트리에 추가할 노드로 변환
+            const employeeNode = {
+                key: employee.employeeId,
+                title: (
+                    <div className="org-status-wrap">
+                        <div className="org-status-icon">
+                            {/* 직원 상태 아이콘 */}
+                            {getStatusIcon(employee.employeeStatus)}
+                        </div>
+                        <span>
+                            {/* 직원 이름, 직급, 상태메시지 */}
+                            {employee.employeeName} {employee.jobName}
+                            <span className="org-status-message" title={employee.employeeStatusMessage}>
+                                {employee.employeeStatusMessage ? (employee.employeeStatusMessage) : ''}
+                            </span>
+                        </span>
+                    </div>
+                ),
+                isLeaf: true, // 최하위 노드로  설정
             };
+
+            // 부서가 아직 추가되지 않았다면 부서 노드 생성
+            if (!departmentMap[departmentName]) {
+                const departmentNode = {
+                    key: departmentName,
+                    title: <span className="org-department-title">{departmentName}</span>,
+                    children: [] // 부서 하위에 추가될 직원 노드 저장
+                };
+                departmentMap[departmentName] = departmentNode; // 부서를 맵에 등록
+                tree[0].children.push(departmentNode); // 루트 노드에 부서 추가
+            }
+            departmentMap[departmentName].children.push(employeeNode); // 부서 노드의 하위에 직원 노드 추가
         });
+
+        return tree;
     };
 
-
-    // 트리 데이터를 새로운 상태로 업데이트하는 함수
+    // 🟢 트리 데이터를 새로운 상태로 업데이트하는 함수
     const updateTreeWithNewStatus = (treeData, statusUpdate) => {
-        const {employeeId, newStatus} = statusUpdate;
+        const { employeeId, newStatus, newStatusMessage } = statusUpdate;
 
         // 트리 노드를 업데이트하는 재귀 함수
-        const updateNodeStatus = (nodes) => {
-            return nodes.map(node => {
+        const updateNodeStatus = (treeData) => {
+            return treeData.map(node => {
                 if (node.key === employeeId) {
-                    // 해당 직원의 상태를 업데이트
+                    // 해당 직원의 상태 업데이트
                     return {
-                        ...node, title: (<div style={{display: "flex", alignItems: "center"}}>
-                            {getStatusIcon(newStatus)} {/* 상태에 맞는 아이콘 */}
-                            <span style={{marginLeft: "5px"}}>{node.title.props.children[1].props.children}</span>
-                        </div>)
+                        ...node,
+                        title: (
+                            <div className="org-status-wrap">
+                                {getStatusIcon(newStatus)}
+                                <span>
+                                    {node.title.props.children[1].props.children}
+                                    <span className="org-status-message" title={newStatusMessage}>
+                                        {newStatusMessage  || ""}
+                                    </span>
+                                </span>
+                            </div>
+                        )
                     };
                 } else if (node.children) {
-                    // 자식 노드가 있는 경우, 재귀적으로 탐색하여 상태 업데이트
+                    // 부서 노드일 경우, 재귀적으로 탐색하여 상태 업데이트
                     return {
                         ...node, children: updateNodeStatus(node.children),
                     };
@@ -222,7 +242,7 @@ const MessengerHome = () => {
         return updateNodeStatus(treeData);
     };
 
-    // 웹소켓 연결
+    // ⚪ 웹소켓 연결
     useEffect(() => {
         const socket = new SockJS('http://localhost:8787/talk');
         const stompClient = Stomp.over(socket);
@@ -231,16 +251,13 @@ const MessengerHome = () => {
         stompClient.connect({}, () => {
             console.log("WebSocket 연결 성공");
 
+            // 직원 상태 업데이트
             stompClient.subscribe('/topic/status', (statusResponse) => {
-                const statusUpdate = JSON.parse(statusResponse.body);
+                const statusUpdate = JSON.parse(statusResponse.body); // const { employeeId, newStatus, newStatusMessage } = statusUpdate;
                 setTreeData((prevData) => updateTreeWithNewStatus(prevData, statusUpdate));
-                console.log("상태 업데이트:", statusUpdate);
+                console.log("직원 상태 업데이트:", statusUpdate);
             });
 
-            stompClient.subscribe('/topic/statusMessage', (statusMessageResponse) => {
-                const statusMessageUpdate = statusMessageResponse.body;
-                console.log("상태 메시지 업데이트:", statusMessageUpdate);
-            });
         }, (error) => {
             console.log("WebSocket 연결 오류:", error);
         });
@@ -255,8 +272,10 @@ const MessengerHome = () => {
         };
     }, []);
 
-    // React-Select 커스텀 스타일
+    // 🟣 react-select 커스텀 스타일
     const customStyles = {
+        
+        // 전체 컨트롤 영역
         control: (provided) => ({
             ...provided,
             minHeight: '30px',
@@ -269,7 +288,20 @@ const MessengerHome = () => {
             border: 'none',
             boxShadow: 'none',
             marginRight: '0',
-        }), indicatorsContainer: (provided) => ({
+        }), 
+        
+        // 선택된 값이 표시되는 영역
+        valueContainer: (provided) => ({
+            ...provided,
+            height: '30px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            padding: '0 4px',
+        }),
+
+        // 드롭다운 및 입력 아이콘의 컨테이너
+        indicatorsContainer: (provided) => ({
             ...provided,
             height: '28px',
             display: 'flex',
@@ -277,20 +309,33 @@ const MessengerHome = () => {
             alignItems: 'center',
             padding: '0',
             marginLeft: '0px',
-        }), indicatorSeparator: () => ({
-            display: 'none',
-        }), valueContainer: (provided) => ({
+        }),
+
+        // 드롭다운 화살표 아이콘의 스타일
+        dropdownIndicator: (provided) => ({
             ...provided,
-            height: '30px',
+            transition: 'none',
+            padding: '0',
+            marginRight: '2px',
+            cursor: 'pointer'
+        }),
+
+        // 드롭다운 아이콘과의 구분선
+        indicatorSeparator: () => ({
+            display: 'none',
+        }),
+        
+        // 각 옵션의 스타일
+        option: (provided, state) => ({
+            ...provided,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'flex-end',
-            padding: '0 4px',
-        }), dropdownIndicator: (provided) => ({
-            ...provided, transition: 'none', padding: '0', marginRight: '2px'
-        }), option: (provided, state) => ({
-            ...provided, display: 'flex', alignItems: 'center', fontSize: '14px', height: '40px',
-        }), singleValue: (provided, state) => ({
+            fontSize: '14px',
+            height: '40px',
+        }), 
+        
+        // 선택된 값이 표시되는 영역
+        singleValue: (provided, state) => ({
             ...provided,
             display: 'flex',
             alignItems: 'center',
@@ -298,32 +343,37 @@ const MessengerHome = () => {
             marginLeft: '0',
             justifyContent: 'flex-end',
             lineHeight: '1',
-        }), menu: (provided) => ({
+        }),
+        
+        // 드롭다운 메뉴 스타일
+        menu: (provided) => ({
             ...provided,
-            position: 'absolute',
             top: '100%',
+            position: 'absolute',
             marginTop: '0',
             borderRadius: '0',
             width: 'auto',
-            left: '35px',
+            left: '26px',
             fontSize: '14px',
+            padding: '0px 3px 0px 1px',
         }),
     };
 
-    // 상태 변경 함수
+    // ⚪ 상태 변경 및 전송 함수
     const handleStatusChange = async (selectedOption) => {
         const newStatus = selectedOption.value;
         setUser((prevUser) => ({
             ...prevUser, employeeStatus: newStatus
         }));
 
+        // 현재 상태 업데이트 API와 웹소켓을 따로 호출중. 이걸 결합하는게 더 좋지 않을까?
         try {
             await axios.put('/api/messengers/info/update', {employeeStatus: newStatus});
             window.showToast("상태가 변경되었습니다");
 
-            // stompClientRef.current를 사용하여 stompClient에 접근
             stompClientRef.current.send('/app/status', {}, JSON.stringify({
-                employeeId: user.employeeId, newStatus
+                employeeId: user.employeeId,
+                newStatus
             }));
 
             setSearchKeyword((prevKeyword) => prevKeyword + " ");
@@ -332,7 +382,7 @@ const MessengerHome = () => {
         }
     };
 
-    // 상태 메시지 변경 알림창
+    // 🟣 상태 메시지 변경 알림창
     function handleStatusMessage() {
         MySwal.fire({
             title: '상태 메시지 변경',
@@ -358,7 +408,7 @@ const MessengerHome = () => {
         });
     }
 
-    // 상태 메시지 업데이트 함수
+    // 🟣 상태 메시지 업데이트 함수
     const updateStatusMessage = (newStatusMessage) => {
         axios.put('/api/messengers/info/update', {employeeStatusMessage: newStatusMessage})
             .then((response) => {
@@ -372,61 +422,7 @@ const MessengerHome = () => {
             });
     };
 
-    // 직원 데이터 기반의 조직도 트리 구조 생성
-    const createOrgTree = (data) => {
-        const departmentMap = {};
-        const tree = [{
-            key: "0", title: (<div style={{fontWeight: "bold", display: "flex", alignItems: "center"}}>
-                Erpre
-            </div>), children: []
-        }];
-
-        data.forEach((employee) => {
-            const departmentName = employee.departmentName;
-            const employeeNode = {
-                key: employee.employeeId, title: (<div style={{display: "flex", alignItems: "center"}}>
-                    <div>
-                        {getStatusIcon(employee.employeeStatus)}
-                    </div>
-                    <span>
-                        {employee.employeeName} {employee.jobName}
-                        <span
-                            style={{
-                                color: "rgb(142 141 148)",
-                                fontSize: "14px",
-                                marginLeft: "5px",
-                                whiteSpace: "nowrap",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                maxWidth: "100px",
-                                display: "inline-block",
-                                verticalAlign: "middle",
-                                position: "relative",
-                                top: "-1px",
-                            }}
-                            title={employee.employeeStatusMessage}
-                        >
-                            {employee.employeeStatusMessage ? (employee.employeeStatusMessage) : ''}
-                        </span>
-                    </span>
-                </div>), isLeaf: true,
-            };
-
-            if (!departmentMap[departmentName]) {
-                const departmentNode = {
-                    key: departmentName, title: <span style={{fontWeight: "bold"}}>{departmentName}</span>, children: []
-                };
-                departmentMap[departmentName] = departmentNode;
-                tree[0].children.push(departmentNode);
-            }
-
-            departmentMap[departmentName].children.push(employeeNode);
-        });
-
-        return tree;
-    };
-
-    // 트리 구조의 모든 노드에서 키를 추출하여 초기 확장 상태에 사용
+    // 🟢 트리 구조의 모든 노드에서 키를 추출하여 초기 확장 상태에 사용
     const extractKeys = (nodes) => {
         let keys = [];
         nodes.forEach(node => {
@@ -438,23 +434,26 @@ const MessengerHome = () => {
         return keys;
     };
 
-    // 트리 구조 생성 및 업데이트
+    // 🟢 트리 구조 생성 및 업데이트
     useEffect(() => {
         if (employeeData.length > 0) {
-            const structuredData = createOrgTree(employeeData);
+            const structuredData = createOrgTree(employeeData); // employeeData를 부서별로 그룹화된 트리 데이터로 반환
             setTreeData(structuredData);
-            setExpandedKeys(extractKeys(structuredData));
+            setExpandedKeys(extractKeys(structuredData)); // 트리 구조에서 모든 노드의 키를 추출하여 초기 확장 상태 설정
+
+            console.log("조직도 직원 데이터", employeeData);
+            console.log("그룹화된 조직도 직원 데이터", structuredData);
         } else {
             setTreeData([]);
             setExpandedKeys([]);
         }
     }, [employeeData]);
 
-    // 메뉴 외부 클릭 감지하여 메뉴 숨기기
+    // 🟡 컨텍스트 메뉴 외부 클릭 감지하여 메뉴 숨기기
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (menuVisible && !event.target.closest('.context-menu') && !event.target.closest('.rc-tree-node-content-wrapper')) {
-                setMenuVisible(false);
+            if (contextMenu.visible && !event.target.closest('.context-menu')) {
+                setContextMenu((prev) => ({...prev, visible: false, x: prev.x, y: prev.y, node: prev.node}));
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -462,7 +461,7 @@ const MessengerHome = () => {
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [menuVisible]);
+    }, [contextMenu.visible]);
 
     return (
         <div>
@@ -479,7 +478,7 @@ const MessengerHome = () => {
                     className="box search"
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
-                    style={{width: '200px'}}
+                    style={{width: '190px'}}
                 />
 
                 {/* 검색어 삭제 버튼 */}
@@ -492,19 +491,20 @@ const MessengerHome = () => {
                     </button>)}
 
             </div>
+
             {/* 상태 필터 버튼 */}
             <div className="org-status">
-                <button onClick={statusFilter}>
-                    {orgStatus === 'all' && <FaGlobe className="btn1" />}
-                    {orgStatus === 'online' && <FaUserAlt className="btn2" />}
-                    {orgStatus === 'offline' && <FaUserAltSlash className="btn3" />}
+                <button onClick={statusFilter} className={orgStatus === 'all' ? 'btn1' : orgStatus === 'online' ? 'btn2' : 'btn3'}>
+                    {orgStatus === 'all' && <FaGlobe />}
+                    {orgStatus === 'online' && <FaUserAlt />}
+                    {orgStatus === 'offline' && <FaUserAltSlash />}
                 </button>
             </div>
         </div>
 
         <div className="messenger-content" onClick={() => setContextMenu({...contextMenu, visible: false})}>
 
-            {/* 상단 유저 프로필 */}
+            {/* 🟣 상단 유저 프로필 */}
             <div className="messenger-user">
                 <div className="erpre-logo">
                     {user?.employeeImageUrl ? (<img src={user.employeeImageUrl} alt="프로필 사진"/>) : (<FaUserCircle/>)}
@@ -513,14 +513,15 @@ const MessengerHome = () => {
                     <div className="info-wrapper">
                         <div className="user-name">{user?.employeeName || ''}</div>
                         <div className="profile status">
+                            {/* react-select 라이브러리를 사용한 유저 상태 셀렉트 박스 */}
                             <div className="status-select-wrapper">
                                 <Select
-                                    value={userIcon.find((option) => option.value === user?.employeeStatus)}
+                                    value={userIcon.find(option => option.value === user?.employeeStatus)}
                                     onChange={handleStatusChange}
                                     options={userIcon}
                                     styles={customStyles}
                                     isSearchable={false}
-                                    components={{Option, SingleValue}}
+                                    components={{ Option, SingleValue }}
                                 />
                             </div>
                         </div>
@@ -536,62 +537,50 @@ const MessengerHome = () => {
                 treeData={treeData}
                 expandedKeys={expandedKeys} // 현재 확장된 키
                 onExpand={(keys) => setExpandedKeys(keys)} // 확장/축소 이벤트 콜백 함수
-                // checkable
                 showIcon={false}
                 showLine={true}
-                onCheck={handleCheck}
                 onRightClick={handleRightClick}
                 virtual={false}
             />
 
-            {/* 우클릭 메뉴 */}
-            {menuVisible && (<div
+            {/* 🟡 우클릭 메뉴  */}
+            {contextMenu.visible && (
+                <div
                 className="context-menu"
-                style={{
-                    top: `${menuPosition.y}px`, left: `${menuPosition.x}px`, position: 'fixed', // 'fixed'로 설정하여 스크롤과 관계없이 위치 유지
-                    backgroundColor: '#fff', border: '1px solid #ccc', zIndex: 10000,
-                }}
+                style={{ top: `${contextMenu.y}px`,  left: `${contextMenu.x}px` }}
             >
-                <ul style={{margin: 0, padding: 0, listStyleType: 'none'}}>
-                    {/*<li*/}
-                    {/*    onClick={() => handleMenuClick('viewDetail')}*/}
-                    {/*    style={{padding: '4px 8px', cursor: 'pointer'}}*/}
-                    {/*>*/}
-                    {/*    상세정보*/}
-                    {/*</li>*/}
-                    <li
-                        onClick={() => handleMenuClick('sendMessage')}
-                        style={{padding: '4px 8px', cursor: 'pointer'}}
-                    >
-                        쪽지보내기
-                    </li>
-                    <li
-                        onClick={() => handleMenuClick('startChat')}
-                        style={{padding: '4px 8px', cursor: 'pointer'}}
-                    >
-                        채팅하기
-                    </li>
+                <ul>
+                    <li onClick={() => handleMenuClick('viewDetail')}> 상세정보 </li>
+                    <li onClick={() => handleMenuClick('sendNote')}> 쪽지보내기 </li>
+                    <li onClick={() => handleMenuClick('startChat')}> 채팅하기 </li>
                 </ul>
             </div>)}
 
-            {/* 상세정보 모달 */}
-            {isModalOpen.info && (<InfoDetailModal
-                employeeId={selectedEmployees[0]?.employeeId}
-                closeInfoModal={() => closeModal('info')}
-            />)}
+            {/* 🟡 상세정보 모달 */}
+            {isModalOpen.info && (
+                <InfoDetailModal
+                    employeeId={selectedEmployee[0]?.employeeId}
+                    closeInfoModal={() => closeModal('info')}
+                />
+            )}
 
-            {/* 쪽지보내기 모달 */}
-            {isModalOpen.note && (<NewNoteModal
-                closeNewNoteModal={() => closeModal('note')}
-                initialRecipients={selectedEmployees}
-            />)}
+            {/* 🟡 쪽지보내기 모달 */}
+            {isModalOpen.note && (
+                <NewNoteModal
+                    closeNewNoteModal={() => closeModal('note')}
+                    initialRecipients={selectedEmployee}
+                />
+            )}
 
-            {/* 채팅방 모달 */}
-            {isModalOpen.chat && selectedChatNo && (<ChatRoomModal
-                chatNo={selectedChatNo}
-                closeChatModal={() => closeModal('chat')}
-                chatTitle={selectedEmployees[0]?.employeeName + (selectedEmployees.length > 1 ? ` 외 ${selectedEmployees.length - 1}인` : "")}
-            />)}
+            {/* 🟡 채팅방 모달 */}
+            {isModalOpen.chat && selectedChatNo && (
+                <ChatRoomModal
+                    closeChatModal={() => closeModal('chat')}
+                    chatNo={selectedChatNo}
+                    chatTitle={selectedEmployee[0]?.employeeName}
+                />
+            )}
+
         </div>
     </div>);
 };
