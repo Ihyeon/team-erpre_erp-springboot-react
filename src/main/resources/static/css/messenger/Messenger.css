@@ -70,8 +70,7 @@ h3 { color: black; }
     width: 16px;
     height: 16px;
     border: 2px solid #ccc;
-    border-radius: 3px;
-    margin-right: 8px;
+    border-radius: 3p
     vertical-align: middle;
     box-shadow: none; /* 그림자 제거 */
     background-color: white;
