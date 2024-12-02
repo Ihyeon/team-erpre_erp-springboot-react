@@ -31,6 +31,7 @@ h3 { color: black; }
 /* 유저 프로필*/
 .messenger-user { padding: 10px 0px 10px 10px; margin-left: 15px; display: flex; align-items: center; }
 .messenger-user img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; float: left; margin-top: 5px; object-fit: cover; }
+.messenger-user .erpre-logo svg { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; float: left; margin-top: 5px; object-fit: cover; color: #6C757D; }
 .messenger-user .info { display: flex; flex-direction: column; margin-left: 5px; padding: 0px 0px 0px 10px;}
 .messenger-user .info-wrapper { display: flex; align-items: center; }
 .messenger-user .user-name { font-size: 18px; font-weight: bold; line-height: 1; margin: 0; width: 100%; }

@@ -5,7 +5,7 @@ import 'react-quill/dist/quill.snow.css';
 import {FaRegPlusSquare} from "react-icons/fa";
 import EmployeeSearchModal from "./EmployeeSearchModal";
 import UseSearch from "./useSearch";
-import { UserContext} from "../../context/UserContext";
+import { UserContext } from "../../context/UserContext";
 import { CustomToolbar } from "./CustomToolbar";
 import axios from "axios";
 import SockJS from "sockjs-client";
@@ -14,6 +14,7 @@ import { Stomp } from '@stomp/stompjs';
 
 const NewNoteModal = ({closeNewNoteModal, initialRecipients = [] }) => {
 
+    const { user, setUser } = useContext(UserContext);
     const [recipients, setRecipients] = useState([]); // 선택된 직원 목록
     const [messageContent, setMessageContent] = useState(""); // 발신 메세지
     const [sendToMe, setSendToMe] = useState(false); // 나에게 보내기
@@ -21,7 +22,6 @@ const NewNoteModal = ({closeNewNoteModal, initialRecipients = [] }) => {
     const [scheduledDate, setScheduledDate] = useState(""); // 예약 날짜 선택
     const [employeeSearchText, setEmployeeSearchText] = useState(""); // 직원 검색 텍스트
     const [isEmployeeSearchModalOpen, setEmployeeSearchModalOpen] = useState(false); // 직원 검색 모달창
-    const { user, setUser } = useContext(UserContext);
     const stompClientRef = useRef(null);
 
 

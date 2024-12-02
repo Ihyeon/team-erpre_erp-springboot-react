@@ -41,24 +41,12 @@ function Header() {
     useEffect(() => {
         const socket = new SockJS('http://localhost:8787/talk');
         const stompClient = Stomp.over(socket);
+        stompClient.debug = () => {};
 
         stompClient.connect(
             {},
             () => {
-                console.log("WebSocket 연결 성공");
-
-                // // 상태 업데이트 구독 - /topic/status
-                // stompClient.subscribe('/topic/status', (statusResponse) => {
-                //     const statusUpdate = statusResponse.body;
-                //     setTreeData(prevData => updateTreeWithNewStatus(prevData, statusUpdate));
-                //     console.log("상태 업데이트:", statusUpdate);
-                // })
-                //
-                // // 상태 메시지 업데이트 구독 - /topic/statusMessage
-                // stompClient.subscribe('/topic/statusMessage', (statusMessageResponse) => {
-                //     const statusMessageUpdate = statusMessageResponse.body;
-                //     console.log("상태 메시지 업데이트:", statusMessageUpdate);
-                // });
+                console.log("전역 WebSocket 연결 성공");
 
                 // 수신 쪽지 구독 - /user/queue/note
                 stompClient.subscribe('/user/queue/note', (noteResponse) => {
@@ -70,18 +58,17 @@ function Header() {
                 });
             },
             (error) => {
-                console.log("WebSocket 연결 오류:", error);
+                console.log("전역 WebSocket 연결 오류:", error);
             }
         );
 
         stompClient.reconnectDelay = 10000;
-
         stompClient.activate();
 
         return () => {
             stompClient.deactivate()
-                .then(() => console.log("WebSocket 연결 해제 성공"))
-                .catch((error) => console.log("WebSocket 해제 오류", error));
+                .then(() => console.log("전역 WebSocket 연결 해제 성공"))
+                .catch((error) => console.log("전역 WebSocket 해제 오류", error));
         };
     }, []);
 

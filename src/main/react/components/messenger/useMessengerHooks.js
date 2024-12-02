@@ -69,8 +69,11 @@ export const useMessengerHooks = () => {
     ];
     const [isNoteDropdownOpen, setIsNoteDropdownOpen] = useState(false);
     const handleNoteStatus = (option) => {
-        setNoteStatus(option.value || 'received');
+        const newStatus = option?.value || 'received';
+        setNoteStatus(newStatus);
         setIsNoteDropdownOpen(false);
+
+        console.log("현재 노트 상태", newStatus);
     };
     // 🔴 채팅 목록 state
     const [chatList, setChatList] = useState([]);
