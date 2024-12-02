@@ -45,6 +45,93 @@ const MessengerHome = () => {
     const [selectedChatNo, setSelectedChatNo] = useState(null); // 선택된 채팅방 정보
     const [contextMenu, setContextMenu] = useState({visible: false, x: 0, y: 0, node: null}); // 우클릭 컨텍스트 메뉴 상태
 
+    // 🟣 react-select 커스텀 스타일
+    const customStyles = {
+
+        // 전체 컨트롤 영역
+        control: (provided) => ({
+            ...provided,
+            minHeight: '30px',
+            height: '30px',
+            fontSize: '14px',
+            display: 'flex',
+            width: 'auto',
+            minWidth: '120px',
+            maxWidth: '150px',
+            border: 'none',
+            boxShadow: 'none',
+            marginRight: '0',
+        }),
+
+        // 선택된 값이 표시되는 영역
+        valueContainer: (provided) => ({
+            ...provided,
+            height: '30px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            padding: '0 4px',
+        }),
+
+        // 드롭다운 및 입력 아이콘의 컨테이너
+        indicatorsContainer: (provided) => ({
+            ...provided,
+            height: '28px',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            padding: '0',
+            marginLeft: '0px',
+        }),
+
+        // 드롭다운 화살표 아이콘의 스타일
+        dropdownIndicator: (provided) => ({
+            ...provided,
+            transition: 'none',
+            padding: '0',
+            marginRight: '2px',
+            cursor: 'pointer'
+        }),
+
+        // 드롭다운 아이콘과의 구분선
+        indicatorSeparator: () => ({
+            display: 'none',
+        }),
+
+        // 각 옵션의 스타일
+        option: (provided, state) => ({
+            ...provided,
+            display: 'flex',
+            alignItems: 'center',
+            fontSize: '14px',
+            height: '40px',
+        }),
+
+        // 선택된 값이 표시되는 영역
+        singleValue: (provided, state) => ({
+            ...provided,
+            display: 'flex',
+            alignItems: 'center',
+            fontSize: '16px',
+            marginLeft: '0',
+            justifyContent: 'flex-end',
+            lineHeight: '1',
+        }),
+
+        // 드롭다운 메뉴 스타일
+        menu: (provided) => ({
+            ...provided,
+            top: '100%',
+            position: 'absolute',
+            marginTop: '0',
+            borderRadius: '0',
+            width: 'auto',
+            left: '26px',
+            fontSize: '14px',
+            padding: '0px 3px 0px 1px',
+        }),
+    };
+
     // 🟣 react-select: 드롭다운 옵션에 아이콘과 라벨을 표시하는 커스텀 컴포넌트
     const Option = (props) => {
         return (
@@ -172,6 +259,10 @@ const MessengerHome = () => {
             // 직원 정보를 트리에 추가할 노드로 변환
             const employeeNode = {
                 key: employee.employeeId,
+                employeeName: employee.employeeName,
+                jobName: employee.jobName,
+                employeeStatus: employee.employeeStatus,
+                employeeStatusMessage: employee.employeeStatusMessage,
                 title: (
                     <div className="org-status-wrap">
                         <div className="org-status-icon">
@@ -182,7 +273,7 @@ const MessengerHome = () => {
                             {/* 직원 이름, 직급, 상태메시지 */}
                             {employee.employeeName} {employee.jobName}
                             <span className="org-status-message" title={employee.employeeStatusMessage}>
-                                {employee.employeeStatusMessage ? (employee.employeeStatusMessage) : ''}
+                                {employee.employeeStatusMessage || ''}
                             </span>
                         </span>
                     </div>
@@ -208,29 +299,32 @@ const MessengerHome = () => {
 
     // 🟢 트리 데이터를 새로운 상태로 업데이트하는 함수
     const updateTreeWithNewStatus = (treeData, statusUpdate) => {
-        const { employeeId, newStatus, newStatusMessage } = statusUpdate;
+        const { employeeId, employeeStatus, employeeStatusMessage } = statusUpdate;
 
         // 트리 노드를 업데이트하는 재귀 함수
         const updateNodeStatus = (treeData) => {
             return treeData.map(node => {
                 if (node.key === employeeId) {
-                    // 해당 직원의 상태 업데이트
+
                     return {
                         ...node,
+                        employeeStatus,
+                        employeeStatusMessage,
                         title: (
                             <div className="org-status-wrap">
-                                {getStatusIcon(newStatus)}
+                                <div className="org-status-icon">
+                                    {getStatusIcon(employeeStatus)}
+                                </div>
                                 <span>
-                                    {node.title.props.children[1].props.children}
-                                    <span className="org-status-message" title={newStatusMessage}>
-                                        {newStatusMessage  || ""}
-                                    </span>
+                                {node.employeeName} {node.jobName}
+                                    <span className="org-status-message" title={employeeStatusMessage}>
+                                    {employeeStatusMessage || ''}
                                 </span>
+                            </span>
                             </div>
                         )
                     };
                 } else if (node.children) {
-                    // 부서 노드일 경우, 재귀적으로 탐색하여 상태 업데이트
                     return {
                         ...node, children: updateNodeStatus(node.children),
                     };
@@ -238,24 +332,24 @@ const MessengerHome = () => {
                 return node;
             });
         };
-
         return updateNodeStatus(treeData);
     };
 
-    // ⚪ 웹소켓 연결
+    // ⚪ 웹소켓 구독 연결
     useEffect(() => {
         const socket = new SockJS('http://localhost:8787/talk');
         const stompClient = Stomp.over(socket);
-        stompClientRef.current = stompClient; // stompClientRef에 stompClient 저장
+        stompClientRef.current = stompClient;
+        stompClient.debug = () => {};
 
         stompClient.connect({}, () => {
             console.log("WebSocket 연결 성공");
 
-            // 직원 상태 업데이트
+            // 직원 상태 업데이트 구독
             stompClient.subscribe('/topic/status', (statusResponse) => {
-                const statusUpdate = JSON.parse(statusResponse.body); // const { employeeId, newStatus, newStatusMessage } = statusUpdate;
+                const statusUpdate = JSON.parse(statusResponse.body);
+                console.log("웹소켓으로 구독한 직원 상태 업데이트:", statusUpdate);
                 setTreeData((prevData) => updateTreeWithNewStatus(prevData, statusUpdate));
-                console.log("직원 상태 업데이트:", statusUpdate);
             });
 
         }, (error) => {
@@ -272,124 +366,48 @@ const MessengerHome = () => {
         };
     }, []);
 
-    // 🟣 react-select 커스텀 스타일
-    const customStyles = {
-        
-        // 전체 컨트롤 영역
-        control: (provided) => ({
-            ...provided,
-            minHeight: '30px',
-            height: '30px',
-            fontSize: '14px',
-            display: 'flex',
-            width: 'auto',
-            minWidth: '120px',
-            maxWidth: '150px',
-            border: 'none',
-            boxShadow: 'none',
-            marginRight: '0',
-        }), 
-        
-        // 선택된 값이 표시되는 영역
-        valueContainer: (provided) => ({
-            ...provided,
-            height: '30px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            padding: '0 4px',
-        }),
-
-        // 드롭다운 및 입력 아이콘의 컨테이너
-        indicatorsContainer: (provided) => ({
-            ...provided,
-            height: '28px',
-            display: 'flex',
-            justifyContent: 'flex-end',
-            alignItems: 'center',
-            padding: '0',
-            marginLeft: '0px',
-        }),
-
-        // 드롭다운 화살표 아이콘의 스타일
-        dropdownIndicator: (provided) => ({
-            ...provided,
-            transition: 'none',
-            padding: '0',
-            marginRight: '2px',
-            cursor: 'pointer'
-        }),
-
-        // 드롭다운 아이콘과의 구분선
-        indicatorSeparator: () => ({
-            display: 'none',
-        }),
-        
-        // 각 옵션의 스타일
-        option: (provided, state) => ({
-            ...provided,
-            display: 'flex',
-            alignItems: 'center',
-            fontSize: '14px',
-            height: '40px',
-        }), 
-        
-        // 선택된 값이 표시되는 영역
-        singleValue: (provided, state) => ({
-            ...provided,
-            display: 'flex',
-            alignItems: 'center',
-            fontSize: '16px',
-            marginLeft: '0',
-            justifyContent: 'flex-end',
-            lineHeight: '1',
-        }),
-        
-        // 드롭다운 메뉴 스타일
-        menu: (provided) => ({
-            ...provided,
-            top: '100%',
-            position: 'absolute',
-            marginTop: '0',
-            borderRadius: '0',
-            width: 'auto',
-            left: '26px',
-            fontSize: '14px',
-            padding: '0px 3px 0px 1px',
-        }),
-    };
-
-    // ⚪ 상태 변경 및 전송 함수
-    const handleStatusChange = async (selectedOption) => {
-        const newStatus = selectedOption.value;
-        setUser((prevUser) => ({
-            ...prevUser, employeeStatus: newStatus
-        }));
-
-        // 현재 상태 업데이트 API와 웹소켓을 따로 호출중. 이걸 결합하는게 더 좋지 않을까?
+    // ⚪ 공통 WebSocket 전송 함수
+    const sendStatusUpdate = async (updateType, updateData) => {
         try {
-            await axios.put('/api/messengers/info/update', {employeeStatus: newStatus});
-            window.showToast("상태가 변경되었습니다");
+            stompClientRef.current.send('/app/status', {}, JSON.stringify({ [updateType]: updateData }));
+            setUser((prevUser) => ({ ...prevUser,  [updateType]: updateData, }));
 
-            stompClientRef.current.send('/app/status', {}, JSON.stringify({
-                employeeId: user.employeeId,
-                newStatus
-            }));
-
-            setSearchKeyword((prevKeyword) => prevKeyword + " ");
+            if (updateType === "employeeStatus") {
+                window.showToast("상태가 변경되었습니다.");
+            } else if (updateType === "employeeStatusMessage") {
+                await MySwal.fire({
+                    title: "저장 완료",
+                    text: "상태 메시지가 변경되었습니다.",
+                    icon: "success",
+                });
+            }
         } catch (error) {
-            console.error("상태 업데이트 실패:", error);
+            console.error(`${updateType} 변경 중 오류가 발생했습니다:`, error);
+            window.showToast("변경 중 오류가 발생했습니다.");
         }
     };
 
+    // ⚪ 상태 업데이트 전송 함수
+    const updateStatus = async (selectedOption) => {
+        const newStatus = selectedOption.value;
+        await sendStatusUpdate("employeeStatus", newStatus);
+    };
+
+    // ⚪ 상태 메시지 업데이트 전송 함수
+    const updateStatusMessage = async (newStatusMessage) => {
+        await sendStatusUpdate("employeeStatusMessage", newStatusMessage);
+    };
+
     // 🟣 상태 메시지 변경 알림창
-    function handleStatusMessage() {
-        MySwal.fire({
+    async function handleStatusMessage() {
+        const result = await MySwal.fire({
             title: '상태 메시지 변경',
             input: 'text',
             inputPlaceholder: '50자 이하',
             inputAttributes: {
-                maxlength: 50, 'aria-label': '50자 이하', autocomplete: 'off'
+                maxlength: 50,
+                'aria-label': '50자 이하',
+                autocomplete: 'off',
             },
             showCancelButton: true,
             confirmButtonText: '저장',
@@ -400,27 +418,12 @@ const MessengerHome = () => {
                     return false;
                 }
                 return newStatusMessage;
-            }
-        }).then((result) => {
-            if (result.isConfirmed && result.value) {
-                updateStatusMessage(result.value);
-            }
+            },
         });
+        if (result.isConfirmed && result.value) {
+            await updateStatusMessage(result.value);
+        }
     }
-
-    // 🟣 상태 메시지 업데이트 함수
-    const updateStatusMessage = (newStatusMessage) => {
-        axios.put('/api/messengers/info/update', {employeeStatusMessage: newStatusMessage})
-            .then((response) => {
-                MySwal.fire('저장 완료', '상태 메시지가 변경되었습니다.', 'success');
-                setUser((prevUser) => ({
-                    ...prevUser, employeeStatusMessage: newStatusMessage
-                }));
-            })
-            .catch((error) => {
-                window.showToast("상태 메시지 변경 중 오류가 발생했습니다", 'error');
-            });
-    };
 
     // 🟢 트리 구조의 모든 노드에서 키를 추출하여 초기 확장 상태에 사용
     const extractKeys = (nodes) => {
@@ -465,7 +468,6 @@ const MessengerHome = () => {
 
     return (
         <div>
-
         {/* 검색 및 필터 */}
         <div className="search-wrap search-wrap">
             <div className={`search_box ${searchKeyword ? 'has_text' : ''}`}>
@@ -489,7 +491,6 @@ const MessengerHome = () => {
                     >
                         <i className="bi bi-x"></i>
                     </button>)}
-
             </div>
 
             {/* 상태 필터 버튼 */}
@@ -517,7 +518,7 @@ const MessengerHome = () => {
                             <div className="status-select-wrapper">
                                 <Select
                                     value={userIcon.find(option => option.value === user?.employeeStatus)}
-                                    onChange={handleStatusChange}
+                                    onChange={updateStatus}
                                     options={userIcon}
                                     styles={customStyles}
                                     isSearchable={false}

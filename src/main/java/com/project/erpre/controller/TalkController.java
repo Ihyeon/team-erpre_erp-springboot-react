@@ -1,8 +1,10 @@
 package com.project.erpre.controller;
 
 import com.project.erpre.model.dto.ChatMessageDTO;
+import com.project.erpre.model.dto.EmployeeStatusDTO;
 import com.project.erpre.model.dto.NoteDTO;
 import com.project.erpre.service.MessengerService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -11,14 +13,16 @@ import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
-// 웹소켓 메시지 커치
-// 클라이언트 간 실시간 메시지 전송 (채팅, 쪽지, 알림 등)
-// STOMP 프로토콜을 이용해 메시지를 처리하고 브로드캐스트
+// STOMP 프로토콜을 활용하여 클라이언트 간 실시간 메시지 전송 처리
+// 주로 채팅, 쪽지, 알림과 같은 기능 구현
+// 메시지 전송 후 특정 사용자나 그룹에 브로드캐스트
+@Slf4j
 @Controller
 public class TalkController {
-
 
     private final MessengerService messengerService;
     private final SimpMessagingTemplate messagingTemplate;
@@ -29,24 +33,49 @@ public class TalkController {
         this.messagingTemplate = messagingTemplate;
     }
 
-    // 🟠 쪽지 메세지 전송 및 저장
+    // 🔵 직원 상태 및 상태 메시지 전송 및 저장
+    @MessageMapping("/status")
+    public void sendStatus(EmployeeStatusDTO employeeStatus, Principal principal) {
+        if (principal == null) {
+            throw new IllegalStateException("WebSocket 요청에서 인증된 사용자가 없습니다.");
+        }
+        String senderId = principal.getName();
+        System.out.println("Principal에서 가져온 사용자 ID: " + principal.getName());
+
+        Map<String, String> updates= new HashMap<>();
+        if (employeeStatus.getEmployeeStatus() != null) {
+            updates.put("employeeStatus", employeeStatus.getEmployeeStatus());
+        }
+        if (employeeStatus.getEmployeeStatusMessage() != null) {
+            updates.put("employeeStatusMessage", employeeStatus.getEmployeeStatusMessage());
+        }
+
+        // 직원 업데이트 상태 DB에 저장
+        EmployeeStatusDTO updatedStatus = messengerService.updateInfo(updates, senderId);
+        
+        // 각 구독자에게 상태 전송
+        messagingTemplate.convertAndSend("/topic/status", updatedStatus);
+    }
+
+
+    // 🟠 쪽지 전송 및 저장
     @MessageMapping("/note")
     public void sendNote(NoteDTO note, Principal principal) {
         if (principal == null) {
-            throw new IllegalStateException("인증된 사용자가 필요합니다.");
+            throw new IllegalStateException("WebSocket 요청에서 인증된 사용자가 없습니다.");
         }
 
         String senderId = principal.getName();
         Optional<LocalDateTime> scheduledDate = Optional.ofNullable(note.getNoteSendDate());
 
-        // 메시지 저장 처리
+        // 쪽지 DB에 저장
         NoteDTO savedNote = messengerService.createNote(
                 senderId,
                 note.getNoteContent(),
                 scheduledDate,
                 note.getNoteReceiverIds());
 
-        // 각 수신자에게 메시지 전송
+        // 각 수신자에게 쪽지 전송
         for (String receiverId : note.getNoteReceiverIds()) {
             messagingTemplate.convertAndSendToUser(receiverId, "/queue/note", savedNote);
         }
@@ -69,6 +98,5 @@ public class TalkController {
         System.out.println("메시지 저장 후 전송: 채팅방 번호 " + chatNo + ", 메시지 내용: " + savedMessage);
         System.out.println("메시지 전송 완료 - 구독 경로: /topic/chat/" + chatNo + ", 메시지 내용: " + savedMessage);
     }
-
 
 }

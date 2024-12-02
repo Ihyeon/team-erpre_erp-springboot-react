@@ -18,20 +18,31 @@ import java.util.Map;
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    // 웹소켓 연결을 설정하는 엔드포인트 정의
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/talk")
                 .setAllowedOriginPatterns("*")
                 .setHandshakeHandler(new DefaultHandshakeHandler() {
                     @Override
-                    protected Principal determineUser(@NonNull ServerHttpRequest request, @NonNull WebSocketHandler wsHandler, @NonNull Map<String, Object> attributes) {
-                        return null; // 모든 사용자가 접근 가능하도록 null 반환
+                    protected Principal determineUser(@NonNull ServerHttpRequest request,
+                                                      @NonNull WebSocketHandler wsHandler,
+                                                      @NonNull Map<String, Object> attributes) {
+//                        return null;
+                        Principal principal = request.getPrincipal();
+                        if (principal != null) {
+                            System.out.println("WebSocket 연결된 사용자: " + principal.getName());
+                        } else {
+                            System.out.println("WebSocket 연결 시 Principal 객체가 null입니다.");
+                        }
+                        return principal;
                     }
                 })
                 .addInterceptors(new HttpSessionHandshakeInterceptor())
                 .withSockJS();
     }
 
+    // 메시지 브로커 설정
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
 
@@ -43,14 +54,5 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     }
 
-// 1. /topic/note:  1:多 쪽지 전송. 이 경로를 구독하고 있는 모든 사용자에게 쪽지가 전달
-// 1. /topic/chat: 그룹 채팅. 이 경로를 구독하고 있는 모든 사용자(즉, 해당 채팅방에 참여하고 있는 사용자들)에게 메시지가 전달
-    // 이것에 대한 의문 -> 그럼 해당 그룹채팅방에 참여하고 있는 나는 구독도 하고 전송도 하는 것인가? 그럼 두 번 오는건가?
-
-// 2. /user/queue/note: 1:1 쪽지. 특정 사용자에게만 쪽지를 전송, convertAndSendToUser 메서드를 사용하여 전송하면 "/user/queue/note"를 구독하고 있는 특정 사용자에게만 메시지가 전달
-// 2. /user/queue/chat:  1:1 채팅. 특정 사용자에게만 채팅 메시지를 전송할 때 사용
-
-    // /app의 역할? 클라이언트가 메시지를 서버로 보낼 때 사용하는 경로의 프리픽스, 실제로는 서버 내부에서만 사용됨. 프론트로 나가지 않음
-    // 클라이언트가 /app/sendNote로 메세지를 보내면 서버는 @MessageMapping("/sendNote")메서드를 실행
 
 }

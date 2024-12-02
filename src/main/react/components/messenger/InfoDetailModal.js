@@ -69,7 +69,7 @@ const InfoDetailModal = ({ employeeId, closeInfoModal }) => {
                             <input
                                 type='text'
                                 className='box'
-                                value={employeeInfo.departmentId || ''}
+                                value={employeeInfo.departmentName || ''}
                                 readOnly
                             />
                         </div>
@@ -78,7 +78,7 @@ const InfoDetailModal = ({ employeeId, closeInfoModal }) => {
                             <input
                                 type='text'
                                 className='box'
-                                value={employeeInfo.jobId || ''}
+                                value={employeeInfo.jobName || ''}
                                 readOnly
                             />
                         </div>

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/messengers")
@@ -95,11 +96,10 @@ public class MessengerController {
         return ResponseEntity.noContent().build();
     }
 
-    // 유저 정보 업데이트 API (상태 메시지, 핸드폰 번호, 상태 등)
+    // 유저 정보 업데이트 API (핸드폰 번호)
     @PutMapping("/info/update")
     public ResponseEntity<?> updateInfo(@RequestBody Map<String, String> requests) {
-        messengerService.updateInfo(requests);
-
+        messengerService.updateEmployeeTel(requests);
         return ResponseEntity.noContent().build();
     }
 
@@ -131,19 +131,6 @@ public class MessengerController {
         NoteDTO messageDetail = messengerService.getNoteByNo(messageNo);
         return ResponseEntity.ok(messageDetail);
     }
-
-//    // 새 쪽지 생성 API (파일url, 유형 등 추가)
-//    @PostMapping("/note/create")
-//    public ResponseEntity<MessageDTO> createNote(
-//            @RequestBody MessageDTO.NoteRequestDTO noteRequestDTO) {
-//
-//        MessageDTO createdNote = messengerService.createNote(
-//                noteRequestDTO.getMessageContent(),
-//                noteRequestDTO.getMessageSendDate(),
-//                noteRequestDTO.getMessageReceiverIds()
-//        );
-//        return ResponseEntity.ok(createdNote);
-//    }
 
     // 쪽지 북마크 상태 변경 API
     @PutMapping("/note/{messageNo}/bookmark")

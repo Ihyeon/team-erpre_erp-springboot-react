@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import NewNoteModal from "./NewNoteModal";
 import ReceivedNoteModal from "./ReceivedNoteModal";
 import {BsEnvelopePlusFill} from "react-icons/bs";
@@ -6,10 +6,11 @@ import {FaStar, FaTrashAlt} from "react-icons/fa";
 import axios from "axios";
 import DOMPurify from "dompurify";
 import Swal from "sweetalert2";
-import { useMessenger } from '../../context/MessengerContext';
+import {UserContext} from "../../context/UserContext";
 
 const Note = ({ noteStatus, isNewNoteModalOpen, openNewNoteModal, closeNewNoteModal, noteList = [], setNoteList, formatDate }) => {
 
+    const {user} = useContext(UserContext);
     const [noteDetail, setNoteDetail] = useState(null); // 선택된 쪽지의 조회된 상세 정보
     const [menuVisible, setMenuVisible] = useState(false);
     const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });

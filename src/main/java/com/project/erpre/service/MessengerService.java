@@ -111,15 +111,21 @@ public class MessengerService {
         employeeRepository.save(employee);
     }
 
-    // 유저 정보 업데이트 (상태 메시지, 핸드폰 번호, 상태 등)
-    public void updateInfo(Map<String, String> requests) {
+    // 유저 정보 업데이트 (핸드폰 번호)
+    public void updateEmployeeTel (Map<String, String> requests) {
         String employeeId = getEmployeeIdFromAuthentication();
         Employee employee = employeeRepository.findByEmployeeId(employeeId)
+                .orElseThrow(() -> new RuntimeException("해당 직원을 찾을 수 없습니다"));
+
+        employee.setEmployeeTel(requests.get("employeeTel"));
+        employeeRepository.save(employee);
+    }
+
+    // 유저 정보 업데이트 (상태, 상태 메시지)
+    public EmployeeStatusDTO updateInfo(Map<String, String> requests, String senderId) {
+        Employee employee = employeeRepository.findByEmployeeId(senderId)
                .orElseThrow(() -> new RuntimeException("해당 직원을 찾을 수 없습니다"));
 
-        if (requests.containsKey("employeeTel")) {
-            employee.setEmployeeTel(requests.get("employeeTel"));
-        }
         if (requests.containsKey("employeeStatus")) {
             employee.setEmployeeStatus(requests.get("employeeStatus"));
             employee.setEmployeeStatusUpdateTime(Timestamp.valueOf(LocalDateTime.now()));
@@ -129,6 +135,13 @@ public class MessengerService {
         }
 
         employeeRepository.save(employee);
+
+        EmployeeStatusDTO updatedStatus = new EmployeeStatusDTO();
+        updatedStatus.setEmployeeId(senderId);
+        updatedStatus.setEmployeeStatus(employee.getEmployeeStatus());
+        updatedStatus.setEmployeeStatusMessage(employee.getEmployeeStatusMessage());
+
+        return updatedStatus;
     }
 
 
